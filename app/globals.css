@@ -1,0 +1,252 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 36 33% 95%;
+    --foreground: 20 10% 7%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 10% 7%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 10% 7%;
+    --primary: 20 10% 7%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 30 12% 90%;
+    --secondary-foreground: 20 10% 7%;
+    --muted: 30 12% 90%;
+    --muted-foreground: 27 6% 45%;
+    --accent: 30 12% 90%;
+    --accent-foreground: 20 10% 7%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 30 8% 82%;
+    --input: 36 33% 95%;
+    --ring: 27 6% 62%;
+    --success: 132 74% 37%;
+    --danger: 0 72% 51%;
+    --chart-1: 27 96% 61%;
+    --chart-2: 187 85% 37%;
+    --chart-3: 221 83% 53%;
+    --chart-4: 45 93% 58%;
+    --chart-5: 343 82% 59%;
+    --sidebar: 0 0% 98%;
+    --sidebar-foreground: 20 10% 7%;
+    --sidebar-primary: 20 10% 7%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 30 12% 90%;
+    --sidebar-accent-foreground: 20 10% 7%;
+    --sidebar-border: 30 8% 82%;
+    --sidebar-ring: 27 6% 62%;
+    --radius: 0.625rem;
+       --scrollbar-track: 30 12% 90%;
+    --scrollbar-thumb: 20 10% 18%;
+    --scrollbar-thumb-hover: 20 10% 10%;
+  }
+
+  .dark {
+    --background: 20 10% 7%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 15%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 20 10% 7%;
+    --secondary: 0 0% 23%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 23%;
+    --muted-foreground: 0 0% 64%;
+    --accent: 0 0% 23%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 25%;
+    --input: 0 0% 15%;
+    --ring: 220 9% 46%;
+    --success: 142 71% 45%;
+    --danger: 0 89% 71%;
+    --chart-1: 43 96% 56%;
+    --chart-2: 173 80% 40%;
+    --chart-3: 213 94% 68%;
+    --chart-4: 280 89% 74%;
+    --chart-5: 340 82% 60%;
+    --sidebar: 20 10% 12%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 20 10% 7%;
+    --sidebar-accent: 0 0% 23%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 25%;
+    --sidebar-ring: 220 9% 46%;
+        --scrollbar-track: 0 0% 16%;
+    --scrollbar-thumb: 0 0% 34%;
+    --scrollbar-thumb-hover: 0 0% 46%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: none;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--scrollbar-thumb) / 0.92)
+      hsl(var(--scrollbar-track) / 0.55);
+  }
+
+  *::-webkit-scrollbar {
+    width: 0.72rem;
+    height: 0.72rem;
+  }
+
+  *::-webkit-scrollbar-track {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: linear-gradient(
+      180deg,
+      hsl(var(--scrollbar-track) / 0.12),
+      hsl(var(--scrollbar-track) / 0.55)
+    );
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    min-height: 3.5rem;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: linear-gradient(
+      180deg,
+      hsl(var(--scrollbar-thumb-hover) / 0.96),
+      hsl(var(--scrollbar-thumb) / 0.88)
+    );
+    background-clip: padding-box;
+    box-shadow:
+      inset 0 0 0 1px hsl(var(--background) / 0.08),
+      0 0 0 1px hsl(var(--foreground) / 0.03);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--scrollbar-thumb-hover)),
+      hsl(var(--scrollbar-thumb))
+    );
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--scrollbar-thumb-hover)),
+      hsl(var(--scrollbar-thumb-hover) / 0.88)
+    );
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+.app-scrollbar {
+  overscroll-behavior: contain;
+}
+
+@supports (scrollbar-gutter: stable) {
+  .app-scrollbar {
+    scrollbar-gutter: stable;
+  }
+}
+
+.app-scrollbar::-webkit-scrollbar {
+  width: 0.62rem;
+  height: 0.62rem;
+}
+
+.app-scrollbar-compact::-webkit-scrollbar {
+  width: 0.48rem;
+  height: 0.48rem;
+}
+
+@media (max-width: 640px) {
+  *::-webkit-scrollbar {
+    width: 0.36rem;
+    height: 0.36rem;
+  }
+
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-thumb {
+    border-width: 1px;
+  }
+
+  .app-scrollbar::-webkit-scrollbar {
+    width: 0.3rem;
+    height: 0.3rem;
+  }
+
+  .app-scrollbar-compact::-webkit-scrollbar {
+    width: 0.24rem;
+    height: 0.24rem;
+  }
+
+  @supports (scrollbar-gutter: stable) {
+    .app-scrollbar {
+      scrollbar-gutter: auto;
+    }
+  }
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: spin 0.5s linear infinite;
+}
+
+input[type="number"],
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield !important;
+}
+
+input[type="number"]:focus {
+  -moz-appearance: textfield !important;
+}
+
+input[type="number"]::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
