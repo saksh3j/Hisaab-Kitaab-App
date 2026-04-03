@@ -761,27 +761,6 @@ export function MemberDetail({
               </div>
             )}
           </div>
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <button
-              onClick={handleDownloadPdf}
-              aria-label="Download ledger"
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-xs font-semibold text-foreground hover:bg-muted sm:px-3">
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Download</span>
-            </button>
-            <button
-              onClick={handleSendEmail}
-              disabled={isSendingEmail}
-              aria-label={
-                isSendingEmail ? "Sending ledger email" : "Send ledger email"
-              }
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-2.5 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60 sm:px-3">
-              <Send className="h-4 w-4" />
-              <span className="hidden sm:inline">
-                {isSendingEmail ? "Sending..." : "Send Email"}
-              </span>
-            </button>
-          </div>
           <button
             onClick={openEditSheet}
             className="p-2 -mr-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
@@ -833,6 +812,24 @@ export function MemberDetail({
               {clearedCount === 1 ? "" : "s"} balance me count nahi ho rahi.
             </p>
           )}
+        </div>
+
+        <div className="flex gap-3 mt-4">
+          <button
+            onClick={handleDownloadPdf}
+            aria-label="Download ledger"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm hover:bg-muted/60 transition-colors">
+            <Download className="h-4 w-4 text-muted-foreground" />
+            <span>Download</span>
+          </button>
+          <button
+            onClick={handleSendEmail}
+            disabled={isSendingEmail}
+            aria-label={isSendingEmail ? "Sending ledger email" : "Send ledger email"}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm hover:bg-muted/60 transition-colors disabled:opacity-60">
+            <Send className="h-4 w-4 text-primary" />
+            <span>{isSendingEmail ? "Sending..." : "Email Ledger"}</span>
+          </button>
         </div>
       </div>
 
@@ -945,7 +942,7 @@ export function MemberDetail({
             style={transactionDeleteDialogStyle}>
             <h3 className="mb-2 text-lg font-semibold">Delete Transaction?</h3>
             <p className="mb-5 text-sm text-muted-foreground">
-              {transactionToDelete.description} permanently delete ho jayega.
+              {transactionToDelete?.description} permanently delete ho jayega.
             </p>
             <div className="flex gap-3">
               <button
@@ -955,7 +952,9 @@ export function MemberDetail({
               </button>
               <button
                 onClick={() => {
-                  onDeleteTransaction(transactionToDelete.id);
+                  if (transactionToDelete) {
+                    onDeleteTransaction(transactionToDelete.id);
+                  }
                   setTransactionToDelete(null);
                 }}
                 className="flex-1 rounded-lg bg-danger py-2.5 font-medium text-white">
