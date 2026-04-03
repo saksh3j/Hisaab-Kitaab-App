@@ -746,7 +746,7 @@ export function MemberDetail({
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-background border-b border-border safe-top">
-        <div className="flex items-center gap-3 p-4">
+        <div className="flex items-center gap-2 p-3">
           <button
             onClick={onBack}
             className="p-2 -ml-2 rounded-lg hover:bg-muted">
@@ -777,18 +777,37 @@ export function MemberDetail({
       </header>
 
       {/* Balance Card */}
-      <div className="p-4">
+      <div className="px-3 py-2">
         <div
-          className={`p-4 rounded-xl border ${isPositive ? "border-success/40 bg-success/15" : "border-danger/40 bg-danger/15"}`}>
-          <p className="text-xs text-muted-foreground mb-1 font-medium uppercase tracking-wider">
-            {isPositive ? "Mereko Lena Hai" : "Mereko Dena Hai"}
-          </p>
-          <p
-            className={`text-3xl font-bold font-mono tabular-nums ${isPositive ? "text-success" : "text-danger"}`}>
-            {formatCurrency(balance)}
-          </p>
+          className={`p-3.5 rounded-xl border ${isPositive ? "border-success/40 bg-success/15" : "border-danger/40 bg-danger/15"}`}>
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[10px] text-muted-foreground mb-1 font-semibold uppercase tracking-wider">
+                {isPositive ? "Mereko Lena Hai" : "Mereko Dena Hai"}
+              </p>
+              <p
+                className={`text-2xl font-bold font-mono tabular-nums ${isPositive ? "text-success" : "text-danger"}`}>
+                {formatCurrency(balance)}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <button
+                onClick={handleDownloadPdf}
+                aria-label="Download ledger"
+                className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-foreground/70 hover:text-foreground transition-all active:scale-95 shadow-sm border border-black/5 dark:border-white/5 backdrop-blur-sm">
+                <Download className="h-[18px] w-[18px]" strokeWidth={2.5} />
+              </button>
+              <button
+                onClick={handleSendEmail}
+                disabled={isSendingEmail}
+                aria-label={isSendingEmail ? "Sending ledger email" : "Send ledger email"}
+                className="flex h-[32px] w-[32px] items-center justify-center rounded-[10px] bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-foreground/70 hover:text-foreground transition-all active:scale-95 shadow-sm border border-black/5 dark:border-white/5 backdrop-blur-sm disabled:opacity-50">
+                <Send className="h-[18px] w-[18px] translate-x-[-1px] translate-y-[1px]" strokeWidth={2.5} />
+              </button>
+            </div>
+          </div>
 
-          <div className="flex gap-4 mt-4 pt-3 border-t border-border/50">
+          <div className="flex gap-3 mt-3 pt-2.5 border-t border-border/50">
             <div className="flex-1">
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
                 Total Lena
@@ -807,34 +826,16 @@ export function MemberDetail({
             </div>
           </div>
           {clearedCount > 0 && (
-            <p className="mt-3 text-xs text-muted-foreground">
+            <p className="mt-2.5 text-[10px] text-muted-foreground">
               {clearedCount} cleared transaction
               {clearedCount === 1 ? "" : "s"} balance me count nahi ho rahi.
             </p>
           )}
         </div>
-
-        <div className="flex gap-3 mt-4">
-          <button
-            onClick={handleDownloadPdf}
-            aria-label="Download ledger"
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm hover:bg-muted/60 transition-colors">
-            <Download className="h-4 w-4 text-muted-foreground" />
-            <span>Download</span>
-          </button>
-          <button
-            onClick={handleSendEmail}
-            disabled={isSendingEmail}
-            aria-label={isSendingEmail ? "Sending ledger email" : "Send ledger email"}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm hover:bg-muted/60 transition-colors disabled:opacity-60">
-            <Send className="h-4 w-4 text-primary" />
-            <span>{isSendingEmail ? "Sending..." : "Email Ledger"}</span>
-          </button>
-        </div>
       </div>
 
       {/* Transactions History */}
-      <div className="flex-1 px-4 pb-4">
+      <div className="flex-1 px-3 pb-3">
         <h3 className="text-xs text-muted-foreground uppercase tracking-wide mb-3">
           Transaction History ({filteredTransactions.length})
         </h3>
@@ -1149,20 +1150,20 @@ function TransactionItem({
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-lg border p-3 ${
+      className={`flex items-center gap-2.5 rounded-lg border p-2.5 ${
         isCleared ? "border-success/20 bg-success/5" : "bg-card border-border"
       }`}
       onClick={() => setShowActions(!showActions)}>
       <div
-        className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${
+        className={`w-7 h-7 rounded-[6px] flex items-center justify-center text-sm ${
           cat ? cat.color : isLena ? "bg-success/10" : "bg-danger/10"
         }`}>
         {cat ? (
           cat.icon
         ) : isLena ? (
-          <ArrowDownLeft className="w-4 h-4 text-success" />
+          <ArrowDownLeft className="w-3.5 h-3.5 text-success" />
         ) : (
-          <ArrowUpRight className="w-4 h-4 text-danger" />
+          <ArrowUpRight className="w-3.5 h-3.5 text-danger" />
         )}
       </div>
 
@@ -1186,7 +1187,7 @@ function TransactionItem({
             </span>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-[11px] text-muted-foreground/90 mt-0.5">
           {formatDate(transaction.date)}
         </p>
       </div>
@@ -1199,7 +1200,7 @@ function TransactionItem({
               onToggleCleared(transaction.id, !isCleared);
               setShowActions(false);
             }}
-            className={`rounded-lg border p-2 ${
+            className={`rounded-md border p-1.5 ${
               isCleared
                 ? "border-border bg-muted text-foreground"
                 : "border-success/20 bg-success/10 text-success"
@@ -1208,9 +1209,9 @@ function TransactionItem({
               isCleared ? "Restore transaction" : "Mark transaction cleared"
             }>
             {isCleared ? (
-              <Undo2 className="w-4 h-4" />
+              <Undo2 className="w-3.5 h-3.5" />
             ) : (
-              <Check className="w-4 h-4" />
+              <Check className="w-3.5 h-3.5" />
             )}
           </button>
           <button
@@ -1219,9 +1220,9 @@ function TransactionItem({
               onDeleteRequest();
               setShowActions(false);
             }}
-            className="p-2 rounded-lg bg-danger/10 text-danger"
+            className="p-1.5 rounded-md bg-danger/10 text-danger"
             aria-label="Delete transaction">
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       ) : (
