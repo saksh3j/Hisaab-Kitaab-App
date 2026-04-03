@@ -79,8 +79,15 @@ export function useBackHandler(
       );
     }
 
-    const handlePopState = () => {
+    const handlePopState = (e: PopStateEvent) => {
       if (!modalStateIdRef.current) return;
+      
+      // If the current history state still has our modal's ID, it means 
+      // a deeper nested modal was popped, not this one.
+      if (e.state?.modalStateId === modalStateIdRef.current) {
+        return;
+      }
+
       closedByBackRef.current = true;
       modalStateIdRef.current = null;
       closeRef.current();

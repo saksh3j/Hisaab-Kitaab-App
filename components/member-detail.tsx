@@ -89,7 +89,6 @@ export function MemberDetail({
   const emailCaptureTransition = useModalTransition(showEmailCapture, 180);
 
   const closeEditSheet = () => setShowEditSheet(false);
-  useBackHandler(showEditSheet, closeEditSheet);
 
   const { totalLena, totalDena, activeCount, clearedCount } =
     calculateTransactionSummary(member.transactions);
