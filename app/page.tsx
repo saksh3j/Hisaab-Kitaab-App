@@ -182,20 +182,15 @@ export default function App() {
     [state],
   );
 
-  const handleUpdateMemberEmail = useCallback(
-    (memberId: string, email: string) => {
+  const handleUpdateMember = useCallback(
+    (memberId: string, name: string, email: string) => {
       const normalizedEmail = email.trim().toLowerCase();
-      if (!normalizedEmail) {
-        toast.error("Email cannot be empty.");
+      const normalizedName = name.trim();
+      
+      if (!normalizedName) {
+        toast.error("Name cannot be empty.");
         return;
       }
-
-      const memberName =
-        selectedMember?.id === memberId
-          ? selectedMember.name
-          : (getActiveBook(state).members.find(
-              (member) => member.id === memberId,
-            )?.name ?? "Member");
 
       setState((prev) => ({
         ...prev,
@@ -205,7 +200,7 @@ export default function App() {
             ...book,
             members: book.members.map((member) =>
               member.id === memberId
-                ? { ...member, email: normalizedEmail }
+                ? { ...member, name: normalizedName, email: normalizedEmail }
                 : member,
             ),
           };
@@ -214,12 +209,12 @@ export default function App() {
 
       setSelectedMember((prev) =>
         prev && prev.id === memberId
-          ? { ...prev, email: normalizedEmail }
+          ? { ...prev, name: normalizedName, email: normalizedEmail }
           : prev,
       );
-      toast.success(`Email saved for ${memberName}.`);
+      toast.success(`Details saved for ${normalizedName}.`);
     },
-    [selectedMember, state],
+    [state],
   );
 
   // ── Transactions ─────────────────────────────────────────
@@ -497,7 +492,7 @@ export default function App() {
         onDeleteTransaction={handleDeleteTransaction}
         onToggleTransactionCleared={handleToggleTransactionCleared}
         onDeleteMember={handleDeleteMember}
-        onUpdateMemberEmail={handleUpdateMemberEmail}
+        onUpdateMember={handleUpdateMember}
       />
     );
   }
