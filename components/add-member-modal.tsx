@@ -13,6 +13,9 @@ interface AddMemberModalProps {
   members: Member[];
   onClose: () => void;
   onAdd: (name: string, email?: string) => void;
+  mode?: "add" | "edit";
+  initialName?: string;
+  initialEmail?: string;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,6 +25,9 @@ export function AddMemberModal({
   members,
   onClose,
   onAdd,
+  mode = "add",
+  initialName = "",
+  initialEmail = "",
 }: AddMemberModalProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -33,19 +39,17 @@ export function AddMemberModal({
 
   useEffect(() => {
     if (isOpen) {
-      setName("");
-      setEmail("");
+      setName(mode === "edit" ? initialName : "");
+      setEmail(mode === "edit" ? initialEmail : "");
       setError("");
     }
-  }, [isOpen]);
+  }, [isOpen, mode, initialName, initialEmail]);
 
   if (!transition.isMounted) return null;
 
   const overlayStyle: React.CSSProperties = {
     opacity: transition.isVisible ? swipe.overlayOpacity : 0,
-    transition: swipe.isDragging
-      ? "none"
-      : "opacity 160ms ease",
+    transition: swipe.isDragging ? "none" : "opacity 160ms ease",
   };
 
   const panelStyle: React.CSSProperties = {
@@ -76,10 +80,14 @@ export function AddMemberModal({
       return;
     }
 
-    // Check for duplicate (case-insensitive)
-    const exists = members.some(
-      (m) => m.name.toLowerCase() === trimmedName.toLowerCase(),
-    );
+    // Check for duplicate (case-insensitive) ignoring self if editing
+    const exists = members.some((m) => {
+      if (mode === "edit" && m.name.toLowerCase() === initialName.toLowerCase()) {
+        return false;
+      }
+      return m.name.toLowerCase() === trimmedName.toLowerCase();
+    });
+
     if (exists) {
       const message = `${trimmedName} already exists`;
       setError(message);
@@ -124,7 +132,9 @@ export function AddMemberModal({
             className="flex items-center justify-between mb-5"
             {...swipe.dragHandlers}
           >
-            <h2 className="text-lg font-semibold">Add Member</h2>
+            <h2 className="text-lg font-semibold">
+              {mode === "edit" ? "Edit Member" : "Add Member"}
+            </h2>
             <button
               onClick={onClose}
               className="p-1.5 rounded-lg hover:bg-muted"
@@ -172,10 +182,10 @@ export function AddMemberModal({
 
             <button
               type="submit"
-              disabled={!name.trim()}
+              disabled={!name.trim() || (mode === "edit" && name === initialName && email === initialEmail)}
               className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg font-medium disabled:opacity-40 active:opacity-80 transition-opacity"
             >
-              Add Member
+              {mode === "edit" ? "Save Changes" : "Add Member"}
             </button>
           </form>
         </div>

@@ -488,6 +488,7 @@ export default function App() {
     return (
       <MemberDetail
         member={currentMember}
+        members={activeBook.members}
         onBack={() => setSelectedMember(null)}
         onDeleteTransaction={handleDeleteTransaction}
         onToggleTransactionCleared={handleToggleTransactionCleared}

@@ -16,6 +16,7 @@ import {
   roundMoney,
 } from "@/lib/store";
 import { MonthFilterSheet } from "./month-filter-sheet";
+import { AddMemberModal } from "./add-member-modal";
 import {
   ArrowLeft,
   Download,
@@ -28,12 +29,15 @@ import {
   Mail,
   Send,
   UserPen,
+  X,
 } from "lucide-react";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import { useModalTransition } from "@/hooks/use-modal-transition";
+import { useSwipeToClose } from "@/hooks/use-swipe-to-close";
 
 interface MemberDetailProps {
   member: Member;
+  members: Member[];
   onBack: () => void;
   onDeleteTransaction: (transactionId: string) => void;
   onToggleTransactionCleared: (
@@ -48,6 +52,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function MemberDetail({
   member,
+  members,
   onBack,
   onDeleteTransaction,
   onToggleTransactionCleared,
@@ -65,9 +70,6 @@ export function MemberDetail({
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   
   const [showEditSheet, setShowEditSheet] = useState(false);
-  const [editNameInput, setEditNameInput] = useState("");
-  const [editEmailInput, setEditEmailInput] = useState("");
-  const [editError, setEditError] = useState("");
 
   useBackHandler(showDeleteConfirm, () => setShowDeleteConfirm(false));
   useBackHandler(transactionToDelete !== null, () =>
@@ -86,12 +88,8 @@ export function MemberDetail({
   useBackHandler(showEmailCapture, closeEmailCapture);
   const emailCaptureTransition = useModalTransition(showEmailCapture, 180);
 
-  const closeEditSheet = () => {
-    setShowEditSheet(false);
-    setEditError("");
-  };
+  const closeEditSheet = () => setShowEditSheet(false);
   useBackHandler(showEditSheet, closeEditSheet);
-  const editSheetTransition = useModalTransition(showEditSheet, 180);
 
   const { totalLena, totalDena, activeCount, clearedCount } =
     calculateTransactionSummary(member.transactions);
@@ -660,30 +658,7 @@ export function MemberDetail({
   };
 
   const openEditSheet = () => {
-    setEditNameInput(member.name);
-    setEditEmailInput(member.email ?? "");
-    setEditError("");
     setShowEditSheet(true);
-  };
-
-  const handleEditSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const normalizedName = editNameInput.trim();
-    const normalizedEmail = editEmailInput.trim().toLowerCase();
-
-    if (!normalizedName) {
-      setEditError("Name is required");
-      return;
-    }
-
-    if (normalizedEmail && !EMAIL_REGEX.test(normalizedEmail)) {
-      setEditError("Enter a valid email address");
-      return;
-    }
-
-    onUpdateMember(member.id, normalizedName, normalizedEmail);
-    closeEditSheet();
   };
 
   const deleteOverlayStyle: React.CSSProperties = {
@@ -710,20 +685,6 @@ export function MemberDetail({
     opacity: emailCaptureTransition.isVisible ? 1 : 0.98,
     transition:
       "transform 180ms cubic-bezier(0.22,1,0.36,1), opacity 140ms ease",
-    willChange: "transform, opacity",
-    backfaceVisibility: "hidden",
-  };
-
-  const editOverlayStyle: React.CSSProperties = {
-    opacity: editSheetTransition.isVisible ? 1 : 0,
-    transition: "opacity 200ms ease",
-  };
-
-  const editDialogStyle: React.CSSProperties = {
-    transform: `translate3d(0, ${editSheetTransition.isVisible ? 0 : 100}%, 0)`,
-    opacity: editSheetTransition.isVisible ? 1 : 0,
-    transition:
-      "transform 300ms cubic-bezier(0.32, 0.72, 0, 1), opacity 300ms ease",
     willChange: "transform, opacity",
     backfaceVisibility: "hidden",
   };
@@ -1043,91 +1004,18 @@ export function MemberDetail({
         </div>
       )}
 
-      {/* Edit Member Sheet */}
-      {editSheetTransition.isMounted && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 pb-0">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            style={editOverlayStyle}
-            onClick={closeEditSheet}
-          />
-          <div
-            className="relative w-full max-w-md rounded-t-[32px] sm:rounded-3xl border border-border/50 bg-popover/95 p-6 shadow-2xl backdrop-blur-xl sm:mb-8"
-            style={editDialogStyle}>
-            {/* Grabber for bottom sheet look */}
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 h-1.5 w-12 rounded-full bg-border/80 sm:hidden" />
-            
-            <div className="mt-2 sm:mt-0 mb-6 flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 shadow-sm border border-indigo-200/50 dark:border-indigo-800/50">
-                <UserPen className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <div className="min-w-0 pt-1">
-                <h3 className="text-xl font-bold tracking-tight text-foreground">Edit Profile</h3>
-                <p className="mt-1 text-sm font-medium text-muted-foreground/80">
-                  Update {member.name}&apos;s details below.
-                </p>
-              </div>
-            </div>
-
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              {editError && (
-                <div className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-2.5 text-sm font-medium text-danger shadow-sm">
-                  {editError}
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <div className="group relative">
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground/80 transition-colors group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    value={editNameInput}
-                    onChange={(e) => {
-                      setEditNameInput(e.target.value);
-                      setEditError("");
-                    }}
-                    placeholder="Enter full name"
-                    className="w-full rounded-2xl border border-border/70 bg-background/50 px-4 py-3.5 text-[15px] font-semibold text-foreground shadow-sm placeholder:font-medium placeholder:text-muted-foreground/50 transition-all focus:bg-background focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                    autoFocus
-                  />
-                </div>
-
-                <div className="group relative">
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground/80 transition-colors group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={editEmailInput}
-                    onChange={(e) => {
-                      setEditEmailInput(e.target.value);
-                      setEditError("");
-                    }}
-                    placeholder="name@example.com (Optional)"
-                    className="w-full rounded-2xl border border-border/70 bg-background/50 px-4 py-3.5 text-[15px] font-semibold text-foreground shadow-sm placeholder:font-medium placeholder:text-muted-foreground/50 transition-all focus:bg-background focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-8 flex flex-col-reverse sm:flex-row gap-3 pt-4 sm:pt-2">
-                <button
-                  type="button"
-                  onClick={closeEditSheet}
-                  className="w-full rounded-2xl bg-muted/60 hover:bg-muted py-3.5 sm:py-3 text-[15px] font-bold text-foreground transition-all active:scale-[0.98] sm:flex-1">
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="w-full rounded-2xl bg-foreground hover:bg-foreground/90 py-3.5 sm:py-3 text-[15px] font-bold text-background shadow-lg shadow-foreground/15 transition-all active:scale-[0.98] sm:flex-1">
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Edit Member Sheet using reusable component */}
+      <AddMemberModal
+        isOpen={showEditSheet}
+        members={members}
+        onClose={closeEditSheet}
+        mode="edit"
+        initialName={member.name}
+        initialEmail={member.email || ""}
+        onAdd={(name, email) => {
+          onUpdateMember(member.id, name, email || "");
+        }}
+      />
     </div>
   );
 }
