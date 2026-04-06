@@ -117,9 +117,11 @@ export default function App() {
   const handleDeleteBook = useCallback((bookId: string) => {
     let deletedBookName = "Book";
     setState((prev) => {
+      const deletedIndex = prev.books.findIndex((b) => b.id === bookId);
       deletedBookName =
         prev.books.find((b) => b.id === bookId)?.name ?? deletedBookName;
       const remaining = prev.books.filter((b) => b.id !== bookId);
+
       if (remaining.length === 0) {
         const defaultBook = {
           id: generateId(),
@@ -127,12 +129,26 @@ export default function App() {
           createdAt: new Date().toISOString(),
           members: [],
         };
-        return { books: [defaultBook], activeBookId: defaultBook.id };
+        return {
+          ...prev,
+          books: [defaultBook],
+          activeBookId: defaultBook.id,
+        };
       }
+
+      let nextActiveBookId = prev.activeBookId;
+      if (prev.activeBookId === bookId) {
+        const fallbackIndex = Math.max(
+          0,
+          Math.min(deletedIndex - 1, remaining.length - 1),
+        );
+        nextActiveBookId = remaining[fallbackIndex]?.id ?? remaining[0].id;
+      }
+
       return {
+        ...prev,
         books: remaining,
-        activeBookId:
-          prev.activeBookId === bookId ? remaining[0].id : prev.activeBookId,
+        activeBookId: nextActiveBookId,
       };
     });
     setSelectedMember(null);
