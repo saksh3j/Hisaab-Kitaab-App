@@ -68,7 +68,8 @@ export function MemberDetail({
   const [emailInput, setEmailInput] = useState("");
   const [emailError, setEmailError] = useState("");
   const [isSendingEmail, setIsSendingEmail] = useState(false);
-  
+  const [emailSentSuccess, setEmailSentSuccess] = useState(false);
+
   const [showEditSheet, setShowEditSheet] = useState(false);
 
   useBackHandler(showDeleteConfirm, () => setShowDeleteConfirm(false));
@@ -562,6 +563,7 @@ export function MemberDetail({
   const sendLedgerToEmail = async (targetEmail: string) => {
     if (typeof window === "undefined" || isSendingEmail) return false;
     setIsSendingEmail(true);
+    setEmailSentSuccess(false);
 
     try {
       const pdf = await createPdfDocument();
@@ -593,14 +595,26 @@ export function MemberDetail({
         throw new Error(data?.error || "Unable to send email right now.");
       }
 
-      toast.success(`Ledger sent to ${targetEmail}.`);
+      toast.success(`Mail Sent!`, {
+        description: `Ledger sent to ${targetEmail}`,
+        duration: 3000,
+      });
+      setEmailSentSuccess(true);
+
+      setTimeout(() => {
+        setEmailSentSuccess(false);
+      }, 2000);
+
       return true;
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : "Unable to send email right now.";
-      toast.error(message);
+      toast.error(`Failed to send mail`, {
+        description: message,
+        duration: 3000,
+      });
       return false;
     } finally {
       setIsSendingEmail(false);
@@ -709,7 +723,8 @@ export function MemberDetail({
         <div className="flex items-center gap-2 p-3">
           <button
             onClick={onBack}
-            className="p-2 -ml-2 rounded-lg hover:bg-muted">
+            className="p-2 -ml-2 rounded-lg hover:bg-muted"
+          >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1 min-w-0">
@@ -724,13 +739,15 @@ export function MemberDetail({
           <button
             onClick={openEditSheet}
             className="p-2 -mr-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Edit Member">
+            aria-label="Edit Member"
+          >
             <UserPen className="w-5 h-5" />
           </button>
           <button
             onClick={() => setShowDeleteConfirm(true)}
             className="p-2 rounded-lg hover:bg-muted text-danger/80 hover:text-danger hover:bg-danger/10 transition-colors"
-            aria-label="Delete Member">
+            aria-label="Delete Member"
+          >
             <Trash2 className="w-5 h-5" />
           </button>
         </div>
@@ -739,14 +756,16 @@ export function MemberDetail({
       {/* Balance Card */}
       <div className="px-3 py-2">
         <div
-          className={`p-3.5 rounded-xl border ${isPositive ? "border-success/40 bg-success/15" : "border-danger/40 bg-danger/15"}`}>
+          className={`p-3.5 rounded-xl border ${isPositive ? "border-success/40 bg-success/15" : "border-danger/40 bg-danger/15"}`}
+        >
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[10px] text-muted-foreground mb-1 font-semibold uppercase tracking-wider">
                 {isPositive ? "Mereko Lena Hai" : "Mereko Dena Hai"}
               </p>
               <p
-                className={`text-2xl font-bold font-mono tabular-nums ${isPositive ? "text-success" : "text-danger"}`}>
+                className={`text-2xl font-bold font-mono tabular-nums ${isPositive ? "text-success" : "text-danger"}`}
+              >
                 {formatCurrency(balance)}
               </p>
             </div>
@@ -754,15 +773,51 @@ export function MemberDetail({
               <button
                 onClick={handleDownloadPdf}
                 aria-label="Download ledger"
-                className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-foreground/70 hover:text-foreground transition-all active:scale-95 shadow-sm border border-black/5 dark:border-white/5 backdrop-blur-sm">
+                className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-foreground/70 hover:text-foreground transition-all active:scale-95 shadow-sm border border-black/5 dark:border-white/5 backdrop-blur-sm"
+              >
                 <Download className="h-[18px] w-[18px]" strokeWidth={2.5} />
               </button>
               <button
                 onClick={handleSendEmail}
                 disabled={isSendingEmail}
-                aria-label={isSendingEmail ? "Sending ledger email" : "Send ledger email"}
-                className="flex h-[32px] w-[32px] items-center justify-center rounded-[10px] bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-foreground/70 hover:text-foreground transition-all active:scale-95 shadow-sm border border-black/5 dark:border-white/5 backdrop-blur-sm disabled:opacity-50">
-                <Send className="h-[18px] w-[18px] translate-x-[-1px] translate-y-[1px]" strokeWidth={2.5} />
+                aria-label={
+                  isSendingEmail ? "Sending ledger email" : "Send ledger email"
+                }
+                className={`flex h-[32px] w-[32px] items-center justify-center rounded-[10px] transition-all active:scale-95 shadow-sm border backdrop-blur-sm disabled:opacity-50 ${
+                  emailSentSuccess
+                    ? "bg-success/20 border-success/40 text-success"
+                    : "bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-foreground/70 hover:text-foreground border-black/5 dark:border-white/5"
+                }`}
+              >
+                {isSendingEmail ? (
+                  <svg
+                    className="animate-spin h-[18px] w-[18px]"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                ) : emailSentSuccess ? (
+                  <Check className="h-[18px] w-[18px]" strokeWidth={2.5} />
+                ) : (
+                  <Send
+                    className="h-[18px] w-[18px] translate-x-[-1px] translate-y-[1px]"
+                    strokeWidth={2.5}
+                  />
+                )}
               </button>
             </div>
           </div>
@@ -840,7 +895,8 @@ export function MemberDetail({
           type="button"
           onClick={() => setShowMonthFilter(true)}
           className="fixed right-4 z-20 inline-flex items-center gap-2 rounded-full border border-border/80 bg-popover/95 px-4 py-3 text-sm font-semibold text-foreground shadow-[0_18px_40px_-24px_rgba(15,23,42,0.55)] backdrop-blur"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}>
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
+        >
           <CalendarRange className="h-4 w-4 text-muted-foreground" />
           <span>
             {selectedMonth === "all"
@@ -867,7 +923,8 @@ export function MemberDetail({
           />
           <div
             className="relative w-full max-w-sm rounded-2xl bg-popover p-5 shadow-2xl"
-            style={deleteDialogStyle}>
+            style={deleteDialogStyle}
+          >
             <h3 className="text-lg font-semibold mb-2">Delete Member?</h3>
             <p className="text-sm text-muted-foreground mb-5">
               {member.name} ka saara hisaab delete ho jayega.
@@ -875,7 +932,8 @@ export function MemberDetail({
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-2.5 bg-muted text-foreground rounded-lg font-medium">
+                className="flex-1 py-2.5 bg-muted text-foreground rounded-lg font-medium"
+              >
                 Cancel
               </button>
               <button
@@ -883,7 +941,8 @@ export function MemberDetail({
                   onDeleteMember();
                   setShowDeleteConfirm(false);
                 }}
-                className="flex-1 py-2.5 bg-danger text-white rounded-lg font-medium">
+                className="flex-1 py-2.5 bg-danger text-white rounded-lg font-medium"
+              >
                 Delete
               </button>
             </div>
@@ -900,7 +959,8 @@ export function MemberDetail({
           />
           <div
             className="relative w-full max-w-sm rounded-2xl bg-popover p-5 shadow-2xl"
-            style={transactionDeleteDialogStyle}>
+            style={transactionDeleteDialogStyle}
+          >
             <h3 className="mb-2 text-lg font-semibold">Delete Transaction?</h3>
             <p className="mb-5 text-sm text-muted-foreground">
               {transactionToDelete?.description} permanently delete ho jayega.
@@ -908,7 +968,8 @@ export function MemberDetail({
             <div className="flex gap-3">
               <button
                 onClick={() => setTransactionToDelete(null)}
-                className="flex-1 rounded-lg bg-muted py-2.5 font-medium text-foreground">
+                className="flex-1 rounded-lg bg-muted py-2.5 font-medium text-foreground"
+              >
                 Cancel
               </button>
               <button
@@ -918,7 +979,8 @@ export function MemberDetail({
                   }
                   setTransactionToDelete(null);
                 }}
-                className="flex-1 rounded-lg bg-danger py-2.5 font-medium text-white">
+                className="flex-1 rounded-lg bg-danger py-2.5 font-medium text-white"
+              >
                 Delete
               </button>
             </div>
@@ -945,7 +1007,8 @@ export function MemberDetail({
           />
           <div
             className="relative w-full max-w-md rounded-3xl border border-border bg-popover p-6 shadow-2xl"
-            style={emailDialogStyle}>
+            style={emailDialogStyle}
+          >
             <div className="mb-5 flex items-start gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Mail className="h-5 w-5" />
@@ -988,14 +1051,42 @@ export function MemberDetail({
                   type="button"
                   onClick={closeEmailCapture}
                   disabled={isSendingEmail}
-                  className="flex-1 rounded-xl bg-muted py-3 text-sm font-medium text-foreground disabled:opacity-60">
+                  className="flex-1 rounded-xl bg-muted py-3 text-sm font-medium text-foreground disabled:opacity-60"
+                >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSendingEmail}
-                  className="flex-1 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60">
-                  {isSendingEmail ? "Sending..." : "Save & Send"}
+                  className="flex-1 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {isSendingEmail ? (
+                    <>
+                      <svg
+                        className="animate-spin h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span>Sending...</span>
+                    </>
+                  ) : (
+                    <span>Save & Send</span>
+                  )}
                 </button>
               </div>
             </form>
@@ -1040,11 +1131,13 @@ function TransactionItem({
       className={`flex items-center gap-2.5 rounded-lg border p-2.5 ${
         isCleared ? "border-success/20 bg-success/5" : "bg-card border-border"
       }`}
-      onClick={() => setShowActions(!showActions)}>
+      onClick={() => setShowActions(!showActions)}
+    >
       <div
         className={`w-7 h-7 rounded-[6px] flex items-center justify-center text-sm ${
           cat ? cat.color : isLena ? "bg-success/10" : "bg-danger/10"
-        }`}>
+        }`}
+      >
         {cat ? (
           cat.icon
         ) : isLena ? (
@@ -1059,7 +1152,8 @@ function TransactionItem({
           <p
             className={`truncate text-sm font-medium ${
               isCleared ? "text-muted-foreground line-through" : ""
-            }`}>
+            }`}
+          >
             {transaction.description}
           </p>
           {isCleared && (
@@ -1069,7 +1163,8 @@ function TransactionItem({
           )}
           {cat && (
             <span
-              className={`text-[10px] px-1.5 py-0.5 rounded border ${cat.color}`}>
+              className={`text-[10px] px-1.5 py-0.5 rounded border ${cat.color}`}
+            >
               {cat.label}
             </span>
           )}
@@ -1094,7 +1189,8 @@ function TransactionItem({
             }`}
             aria-label={
               isCleared ? "Restore transaction" : "Mark transaction cleared"
-            }>
+            }
+          >
             {isCleared ? (
               <Undo2 className="w-3.5 h-3.5" />
             ) : (
@@ -1108,7 +1204,8 @@ function TransactionItem({
               setShowActions(false);
             }}
             className="p-1.5 rounded-md bg-danger/10 text-danger"
-            aria-label="Delete transaction">
+            aria-label="Delete transaction"
+          >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -1121,7 +1218,8 @@ function TransactionItem({
                 : isLena
                   ? "text-success"
                   : "text-danger"
-            }`}>
+            }`}
+          >
             {isLena ? "+" : "-"}
             {formatCurrency(transaction.amount)}
           </p>
