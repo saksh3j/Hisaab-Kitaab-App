@@ -409,12 +409,19 @@ export function AddTransactionModal({
       return;
     }
 
-    const splits = selectedMembers
+    let splits = selectedMembers
       .map<TransactionSplit>((memberId) => ({
         memberId,
         amount: roundMoney(activeSplitMap[memberId] ?? 0),
       }))
       .filter((split) => split.amount > 0);
+
+    if (!isPayment && shouldIncludeMe && subType === "received") {
+      splits = splits.map((split) => ({
+        ...split,
+        amount: roundMoney(amount - split.amount),
+      }));
+    }
 
     if (splits.length !== selectedMembers.length) {
       const message = "Har selected member ke liye valid split amount bharo.";
