@@ -1,30 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { HomePage } from "@/components/home-page";
+import { MemberDetail } from "@/components/member-detail";
 import { useBackHandler } from "@/hooks/use-back-handler";
-
-const MemberDetail = dynamic(
-  () => import("@/components/member-detail").then((mod) => mod.MemberDetail),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center">
-        <div className="mb-4 flex h-14 w-14 animate-pulse items-center justify-center rounded-3xl bg-gradient-to-br from-amber-100 via-orange-50 to-sky-100 shadow-[0_20px_50px_-32px_rgba(15,23,42,0.35)]">
-          <span className="text-sm font-black tracking-[0.26em] text-slate-900">
-            HK
-          </span>
-        </div>
-        <p className="text-sm font-semibold text-foreground">Opening details</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Pulling member history...
-        </p>
-      </div>
-    ),
-  },
-);
 import {
   Member,
   AppState,
