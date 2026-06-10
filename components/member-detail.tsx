@@ -562,6 +562,15 @@ export function MemberDetail({
 
   const sendLedgerToEmail = async (targetEmail: string) => {
     if (typeof window === "undefined" || isSendingEmail) return false;
+
+    if (!navigator.onLine) {
+      toast.error("Internet required", {
+        description: "Connect to the internet to send email.",
+        duration: 3000,
+      });
+      return false;
+    }
+
     setIsSendingEmail(true);
     setEmailSentSuccess(false);
 
