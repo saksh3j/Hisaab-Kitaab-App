@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { OfflineProvider } from '@/components/offline-provider'
 import { ThemeInitializer } from '@/components/theme-initializer'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
@@ -56,6 +57,7 @@ export default function RootLayout({
           storageKey="hk-theme"
           disableTransitionOnChange
         >
+          <OfflineProvider />
           <ThemeInitializer />
           <Toaster position="bottom-right" richColors closeButton />
           {children}
