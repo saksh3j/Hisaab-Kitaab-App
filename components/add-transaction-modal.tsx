@@ -11,6 +11,7 @@ import {
   Wallet,
   ShoppingBag,
 } from "lucide-react";
+import { Drawer } from "@vladyoslav/drawer";
 import {
   Member,
   TransactionCategory,
@@ -21,8 +22,6 @@ import {
 } from "@/lib/store";
 import { buildEqualSplitPlan } from "@/lib/transaction-splits";
 import { useBackHandler } from "@/hooks/use-back-handler";
-import { useModalTransition } from "@/hooks/use-modal-transition";
-import { useSwipeToClose } from "@/hooks/use-swipe-to-close";
 
 interface AddTransactionModalProps {
   isOpen: boolean;
@@ -103,8 +102,6 @@ export function AddTransactionModal({
   const [submitError, setSubmitError] = useState("");
 
   useBackHandler(isOpen, onClose);
-  const transition = useModalTransition(isOpen, 220);
-  const swipe = useSwipeToClose({ isOpen, onClose, resetDelay: 0 });
 
   useEffect(() => {
     if (isOpen) {
@@ -401,21 +398,6 @@ export function AddTransactionModal({
     onClose();
   };
 
-  const overlayStyle: React.CSSProperties = {
-    opacity: transition.isVisible ? swipe.overlayOpacity : 0,
-    transition: swipe.isDragging ? "none" : "opacity 160ms ease",
-  };
-
-  const panelStyle: React.CSSProperties = {
-    transform: `translate3d(0, ${swipe.dragOffset + (transition.isVisible ? 0 : 18)}px, 0)`,
-    opacity: transition.isVisible ? 1 : 0.98,
-    transition: swipe.isDragging
-      ? "none"
-      : "transform 220ms cubic-bezier(0.22,1,0.36,1), opacity 180ms ease",
-    willChange: "transform, opacity",
-    backfaceVisibility: "hidden",
-  };
-
   const displayError = submitError || splitError;
   const splitSummaryItems: Array<{
     label: string;
@@ -442,44 +424,39 @@ export function AddTransactionModal({
         },
       ];
 
-  if (!transition.isMounted) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
-      <div
-        className="absolute inset-0 bg-black/40 transition-opacity"
-        style={overlayStyle}
-        onClick={onClose}
-      />
-
-      <div
-        className="relative flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl bg-popover shadow-2xl safe-bottom"
-        style={panelStyle}
-      >
+    <Drawer.Root
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      snapPoints={["70%", "92%"]}
+      shouldScaleBackground
+      scaleFrom="70%"
+    >
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40" />
+        <Drawer.Content className="fixed right-0 bottom-0 left-0 z-50 mx-auto flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl bg-popover shadow-2xl safe-bottom">
         <div
           className="flex shrink-0 cursor-grab justify-center pt-3 pb-1 active:cursor-grabbing touch-none"
-          {...swipe.dragHandlers}
         >
           <div className="h-1 w-10 rounded-full bg-border" />
         </div>
 
-        <div
-          className="flex shrink-0 items-center justify-between border-b border-border px-4 pt-4 pb-3"
-          {...swipe.dragHandlers}
-        >
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-4 pt-4 pb-3">
           <div className="flex items-center gap-2">
             {isPayment ? (
               <Wallet className="h-4 w-4 text-muted-foreground" />
             ) : (
               <ShoppingBag className="h-4 w-4 text-muted-foreground" />
             )}
-            <h2 className="text-base font-semibold">
+            <Drawer.Title className="text-base font-semibold">
               {isPayment ? "Payment" : "Expense"}
-            </h2>
+            </Drawer.Title>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-muted">
+          <Drawer.Close className="rounded-lg p-1.5 hover:bg-muted">
             <X className="h-4 w-4 text-muted-foreground" />
-          </button>
+          </Drawer.Close>
         </div>
 
         <form
@@ -903,7 +880,8 @@ export function AddTransactionModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
   );
 }

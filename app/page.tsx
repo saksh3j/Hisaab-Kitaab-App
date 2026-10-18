@@ -74,6 +74,7 @@ export default function App() {
   const showUndo = useCallback(
     (message: string, previousState: AppState) => {
       toast.success(message, {
+        duration: 10_000,
         action: {
           label: "Undo",
           onClick: () => {
