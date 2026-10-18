@@ -780,7 +780,9 @@ export function HomePage({
           >
             <h3 className="mb-2 text-lg font-semibold">Delete Book?</h3>
             <p className="mb-5 text-sm text-muted-foreground">
-              {bookToDelete.name} aur uske saare members ka hisaab delete ho jayega.
+              This permanently removes {bookToDelete.name}, every member, and
+              all transaction history in it. You can undo immediately after
+              deleting.
             </p>
             <div className="flex gap-3">
               <button

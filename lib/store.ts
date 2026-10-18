@@ -117,7 +117,18 @@ export interface AppState {
   userEmail?: string;
 }
 
-const STORAGE_KEY = "hisaab-kitaab-data";
+export const STORAGE_KEY = "hisaab-kitaab-data";
+export const BACKUP_VERSION = 1;
+
+export interface BackupFile {
+  version: number;
+  exportedAt: string;
+  state: AppState;
+}
+
+export type SaveStateResult =
+  | { ok: true }
+  | { ok: false; error: "storage-unavailable" | "storage-full" };
 
 function createDefaultBook(): Book {
   return {
@@ -128,40 +139,108 @@ function createDefaultBook(): Book {
   };
 }
 
-export function getInitialState(): AppState {
-  if (typeof window === "undefined") {
-    const defaultBook = createDefaultBook();
-    return { books: [defaultBook], activeBookId: defaultBook.id };
-  }
-
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      // migrate old format (had `members` at root)
-      if (parsed.members && !parsed.books) {
-        const migratedBook: Book = {
-          id: "default",
-          name: "Main Hisaab",
-          createdAt: new Date().toISOString(),
-          members: parsed.members,
-        };
-        return { books: [migratedBook], activeBookId: "default" };
-      }
-      return parsed;
-    } catch {
-      const defaultBook = createDefaultBook();
-      return { books: [defaultBook], activeBookId: defaultBook.id };
-    }
-  }
-
+export function createDefaultState(): AppState {
   const defaultBook = createDefaultBook();
   return { books: [defaultBook], activeBookId: defaultBook.id };
 }
 
-export function saveState(state: AppState): void {
-  if (typeof window !== "undefined") {
+function isAppState(value: unknown): value is AppState {
+  if (!value || typeof value !== "object") return false;
+
+  const candidate = value as Partial<AppState>;
+  return (
+    Array.isArray(candidate.books) &&
+    typeof candidate.activeBookId === "string" &&
+    candidate.books.every(
+      (book) =>
+        book &&
+        typeof book.id === "string" &&
+        typeof book.name === "string" &&
+        Array.isArray(book.members),
+    )
+  );
+}
+
+export function migrateState(value: unknown): AppState | null {
+  if (!value || typeof value !== "object") return null;
+
+  const legacy = value as { members?: Member[]; books?: Book[] };
+  if (Array.isArray(legacy.members) && !legacy.books) {
+    const migratedBook: Book = {
+      id: "default",
+      name: "Main Hisaab",
+      createdAt: new Date().toISOString(),
+      members: legacy.members,
+    };
+    return { books: [migratedBook], activeBookId: migratedBook.id };
+  }
+
+  if (!isAppState(value)) return null;
+
+  const activeBookExists = value.books.some(
+    (book) => book.id === value.activeBookId,
+  );
+  if (value.books.length === 0) return createDefaultState();
+
+  return {
+    ...value,
+    activeBookId: activeBookExists ? value.activeBookId : value.books[0].id,
+  };
+}
+
+export function parseBackup(serialized: string): AppState | null {
+  try {
+    const parsed = JSON.parse(serialized) as BackupFile | AppState;
+    const state = "state" in parsed ? parsed.state : parsed;
+    return migrateState(state);
+  } catch {
+    return null;
+  }
+}
+
+export function createBackup(state: AppState): string {
+  const backup: BackupFile = {
+    version: BACKUP_VERSION,
+    exportedAt: new Date().toISOString(),
+    state,
+  };
+
+  return JSON.stringify(backup, null, 2);
+}
+
+export function getInitialState(): AppState {
+  if (typeof window === "undefined") {
+    return createDefaultState();
+  }
+
+  let stored: string | null = null;
+  try {
+    stored = localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return createDefaultState();
+  }
+
+  if (stored) {
+    return parseBackup(stored) ?? createDefaultState();
+  }
+
+  return createDefaultState();
+}
+
+export function saveState(state: AppState): SaveStateResult {
+  if (typeof window === "undefined") {
+    return { ok: false, error: "storage-unavailable" };
+  }
+
+  try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return { ok: true };
+  } catch (error) {
+    const name = error instanceof DOMException ? error.name : "";
+    return {
+      ok: false,
+      error: name === "QuotaExceededError" ? "storage-full" : "storage-unavailable",
+    };
   }
 }
 
