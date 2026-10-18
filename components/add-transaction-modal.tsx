@@ -16,6 +16,7 @@ import {
   TransactionCategory,
   TransactionSplit,
   CATEGORIES,
+  Category,
   formatCurrency,
   roundMoney,
 } from "@/lib/store";
@@ -36,6 +37,7 @@ interface AddTransactionModalProps {
     splits: TransactionSplit[],
     category?: TransactionCategory,
   ) => void;
+  categories?: Category[];
 }
 
 type SplitMode = "equal" | "custom";
@@ -79,6 +81,7 @@ export function AddTransactionModal({
   mode,
   onClose,
   onAdd,
+  categories = CATEGORIES,
 }: AddTransactionModalProps) {
   const lastModeRef = useRef<"payment" | "expense">(mode ?? "payment");
   if (mode !== null) {
@@ -393,7 +396,7 @@ export function AddTransactionModal({
     const desc =
       description.trim() ||
       (category
-        ? CATEGORIES.find((item) => item.id === category)?.label
+        ? categories.find((item) => item.id === category)?.label
         : undefined) ||
       (displayMode === "payment" ? "Payment" : "Expense");
 
@@ -578,7 +581,7 @@ export function AddTransactionModal({
                 Category
               </label>
               <div className="flex flex-wrap gap-1.5">
-                {CATEGORIES.map((cat) => (
+                {categories.map((cat) => (
                   <button
                     key={cat.id}
                     type="button"

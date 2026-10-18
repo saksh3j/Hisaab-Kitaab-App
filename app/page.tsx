@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { HomePage } from "@/components/home-page";
 import { MemberDetail } from "@/components/member-detail";
 import { PinLock } from "@/components/pin-lock";
 import { ProfileScreen } from "@/components/profile-screen";
 import { DataScreen } from "@/components/data-screen";
+import { CategoriesScreen } from "@/components/categories-screen";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import {
   Member,
@@ -14,6 +15,8 @@ import {
   TransactionCategory,
   TransactionSplit,
   DeletedItem,
+  Category,
+  CATEGORIES,
   getInitialState,
   saveState,
   generateId,
@@ -36,6 +39,7 @@ export default function App() {
   const [isLocked, setIsLocked] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showData, setShowData] = useState(false);
+  const [showCategories, setShowCategories] = useState(false);
   const stateRef = useRef(state);
   const hasShownStorageError = useRef(false);
 
@@ -537,6 +541,31 @@ export default function App() {
     toast.success(`${item.label} restored.`);
   }, [updateState]);
 
+  const categories = useMemo<Category[]>(
+    () => [...CATEGORIES, ...(state.customCategories ?? [])],
+    [state.customCategories],
+  );
+
+  const handleAddCategory = useCallback((label: string, icon: string) => {
+    const normalizedLabel = label.trim();
+    const id = `custom-${normalizedLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
+    if (!normalizedLabel) return;
+    if (categories.some((category) => category.id === id || category.label.toLowerCase() === normalizedLabel.toLowerCase())) {
+      toast.error("A category with that name already exists.");
+      return;
+    }
+    updateState((prev) => ({ ...prev, customCategories: [...(prev.customCategories ?? []), { id, label: normalizedLabel, icon, color: "bg-primary/10 text-primary border-primary/20" }] }));
+    toast.success(`${normalizedLabel} category added.`);
+  }, [categories, updateState]);
+
+  const handleRenameCategory = useCallback((id: string, label: string) => {
+    updateState((prev) => ({ ...prev, customCategories: (prev.customCategories ?? []).map((category) => category.id === id ? { ...category, label } : category) }));
+  }, [updateState]);
+
+  const handleDeleteCategory = useCallback((id: string) => {
+    updateState((prev) => ({ ...prev, customCategories: (prev.customCategories ?? []).filter((category) => category.id !== id) }));
+  }, [updateState]);
+
   // ── Loading ───────────────────────────────────────────────
   if (!isLoaded) {
     return (
@@ -655,6 +684,10 @@ export default function App() {
     );
   }
 
+  if (showCategories) {
+    return <CategoriesScreen categories={categories} defaultCategoryIds={CATEGORIES.map((category) => category.id)} onBack={() => setShowCategories(false)} onAdd={handleAddCategory} onRename={handleRenameCategory} onDelete={handleDeleteCategory} />;
+  }
+
   const activeBook = getActiveBook(state);
 
   // ── Member Detail ─────────────────────────────────────────
@@ -695,6 +728,8 @@ export default function App() {
       onUpdateUserName={handleUpdateUserName}
       onOpenProfile={() => setShowProfile(true)}
       onOpenData={() => setShowData(true)}
+      categories={categories}
+      onOpenCategories={() => setShowCategories(true)}
     />
   );
 }

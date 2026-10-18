@@ -10,6 +10,7 @@ import {
   TransactionCategory,
   TransactionSplit,
   CATEGORIES,
+  Category,
   calculateBalance,
   formatCurrency,
   formatSignedCurrency,
@@ -44,6 +45,7 @@ import {
     CalendarRange,
   CircleUserRound,
   Database,
+  Tags,
   } from "lucide-react";
 
 interface HomePageProps {
@@ -66,6 +68,8 @@ interface HomePageProps {
   onUpdateUserName: (name: string) => void;
   onOpenProfile: () => void;
   onOpenData: () => void;
+  categories?: Category[];
+  onOpenCategories: () => void;
 }
 
 export function HomePage({
@@ -82,6 +86,8 @@ export function HomePage({
   onUpdateUserName,
   onOpenProfile,
   onOpenData,
+  categories = CATEGORIES,
+  onOpenCategories,
 }: HomePageProps) {
   const [search, setSearch] = useState("");
   const [showAddMember, setShowAddMember] = useState(false);
@@ -330,6 +336,7 @@ export function HomePage({
             )}
             <div className="flex items-center gap-1.5">
               <button type="button" onClick={onOpenData} className="rounded-full border border-border/60 bg-card/70 p-2 text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground" aria-label="Open data and backup"><Database className="h-4 w-4" /></button>
+              <button type="button" onClick={onOpenCategories} className="rounded-full border border-border/60 bg-card/70 p-2 text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground" aria-label="Manage categories"><Tags className="h-4 w-4" /></button>
               <button type="button" onClick={onOpenProfile} className="rounded-full border border-border/60 bg-card/70 p-2 text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground" aria-label="Open profile"><CircleUserRound className="h-4 w-4" /></button>
             </div>
           </div>
@@ -535,7 +542,7 @@ export function HomePage({
           <div className="space-y-1.5">
             {filteredHistoryTransactions.map(({ transaction, memberName }) => {
               const cat = transaction.category
-                ? CATEGORIES.find((c) => c.id === transaction.category)
+                ? categories.find((c) => c.id === transaction.category)
                 : null;
               const isCleared = isTransactionCleared(transaction);
               return (
@@ -839,6 +846,7 @@ export function HomePage({
         mode={transactionMode}
         onClose={() => setTransactionMode(null)}
         onAdd={onAddTransaction}
+        categories={categories}
       />
     </div>
   );

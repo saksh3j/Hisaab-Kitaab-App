@@ -1,14 +1,11 @@
-export type TransactionCategory =
-  | "cash"
-  | "food"
-  | "travel"
-  | "train"
-  | "shopping"
-  | "hotel"
-  | "fuel"
-  | "medical"
-  | "recharge"
-  | "other";
+export type TransactionCategory = string;
+
+export interface Category {
+  id: TransactionCategory;
+  label: string;
+  icon: string;
+  color: string;
+}
 
 export interface Transaction {
   id: string;
@@ -27,12 +24,7 @@ export interface TransactionSplit {
   amount: number;
 }
 
-export const CATEGORIES: {
-  id: TransactionCategory;
-  label: string;
-  icon: string;
-  color: string;
-}[] = [
+export const CATEGORIES: Category[] = [
   {
     id: "cash",
     label: "Cash",
@@ -133,6 +125,7 @@ export interface AppState {
   pinHash?: string;
   lastBackupAt?: string;
   deletedItems?: DeletedItem[];
+  customCategories?: Category[];
 }
 
 export const STORAGE_KEY = "hisaab-kitaab-data";
