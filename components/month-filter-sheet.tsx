@@ -38,6 +38,7 @@ export function MonthFilterSheet({
         if (!open) onClose();
       }}
       snapPoints={["45%", "78%"]}
+      dismissible={false}
       shouldScaleBackground
       scaleFrom="45%"
     >

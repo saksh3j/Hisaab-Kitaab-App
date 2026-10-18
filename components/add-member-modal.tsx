@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Drawer } from "@vladyoslav/drawer";
-import { toast } from "sonner";
+import { toast } from "@/lib/notifications";
 import { Member } from "@/lib/store";
 import { useBackHandler } from "@/hooks/use-back-handler";
 
@@ -94,6 +94,7 @@ export function AddMemberModal({
         if (!open) onClose();
       }}
       snapPoints={["45%", "70%"]}
+      dismissible={false}
       shouldScaleBackground
       scaleFrom="60%"
     >
