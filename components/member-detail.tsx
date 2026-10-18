@@ -201,11 +201,12 @@ export function MemberDetail({
     const cleanText = (value: string) =>
       value.replace(/\s+/g, " ").trim() || "-";
     const columns = [
-      { key: "date", label: "Date", width: 78 },
-      { key: "note", label: "Note", width: 180 },
-      { key: "category", label: "Category", width: 84 },
-      { key: "credit", label: "Credit (+)", width: 86 },
-      { key: "debit", label: "Debit (-)", width: 87 },
+      { key: "date", label: "Date", width: 62 },
+      { key: "note", label: "Note", width: 148 },
+      { key: "category", label: "Category", width: 70 },
+      { key: "credit", label: "Credit (+)", width: 75 },
+      { key: "debit", label: "Debit (-)", width: 75 },
+      { key: "balance", label: "After this", width: 85 },
     ] as const;
     const columnX = columns.reduce<Record<string, number>>(
       (acc, column, idx) => {
@@ -220,6 +221,23 @@ export function MemberDetail({
     const sortedTransactions = [...member.transactions].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
+    const balanceAfterTransaction = new Map<string, number>();
+    let runningBalance = 0;
+
+    [...member.transactions]
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .forEach((transaction) => {
+        if (!isTransactionCleared(transaction)) {
+          runningBalance = roundMoney(
+            runningBalance +
+              (transaction.type === "lena"
+                ? transaction.amount
+                : -transaction.amount),
+          );
+        }
+
+        balanceAfterTransaction.set(transaction.id, runningBalance);
+      });
     const tableBottomY = pageHeight - 62;
     const balanceLabel = balance >= 0 ? "Lena" : "Dena";
     const balanceColor: [number, number, number] =
@@ -254,12 +272,16 @@ export function MemberDetail({
       doc.setTextColor(255, 255, 255);
       columns.forEach((column, idx) => {
         const textX =
-          column.key === "credit" || column.key === "debit"
+          column.key === "credit" ||
+          column.key === "debit" ||
+          column.key === "balance"
             ? columnX[column.key] + column.width - 10
             : columnX[column.key] + 10;
         doc.text(column.label, textX, y + 17, {
           align:
-            column.key === "credit" || column.key === "debit"
+            column.key === "credit" ||
+            column.key === "debit" ||
+            column.key === "balance"
               ? "right"
               : "left",
         });
@@ -381,6 +403,14 @@ export function MemberDetail({
         transaction.type === "dena"
           ? `- ${formatPdfCurrency(transaction.amount)}`
           : "—";
+      const balanceAfter = balanceAfterTransaction.get(transaction.id) ?? 0;
+      const balanceAfterText = isTransactionCleared(transaction)
+        ? "Cleared"
+        : balanceAfter === 0
+          ? "Settled"
+          : `${balanceAfter > 0 ? "+" : "-"} ${formatPdfCurrency(
+              balanceAfter,
+            )}`;
 
       if (isTransactionCleared(transaction)) {
         doc.setFillColor(236, 253, 245);
@@ -455,6 +485,30 @@ export function MemberDetail({
         align: "right",
       });
 
+      doc.setTextColor(
+        isTransactionCleared(transaction)
+          ? 71
+          : balanceAfter >= 0
+            ? 22
+            : 220,
+        isTransactionCleared(transaction)
+          ? 85
+          : balanceAfter >= 0
+            ? 163
+            : 38,
+        isTransactionCleared(transaction)
+          ? 105
+          : balanceAfter >= 0
+            ? 74
+            : 38,
+      );
+      doc.text(
+        balanceAfterText,
+        columnX.balance + columns[5].width - 10,
+        centeredY,
+        { align: "right" },
+      );
+
       return y + rowHeight;
     };
 
@@ -504,6 +558,13 @@ export function MemberDetail({
       doc.text(
         `- ${formatPdfCurrency(totalDena)}`,
         columnX.debit + columns[4].width - 10,
+        totalsY,
+        { align: "right" },
+      );
+      doc.setTextColor(balanceColor[0], balanceColor[1], balanceColor[2]);
+      doc.text(
+        formatSignedPdfCurrency(balance),
+        columnX.balance + columns[5].width - 10,
         totalsY,
         { align: "right" },
       );
