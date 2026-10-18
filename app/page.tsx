@@ -667,6 +667,10 @@ export default function App() {
         onUpdateProfile={handleUpdateProfile}
         onSetPin={handleSetPin}
         onRemovePin={() => updateState((prev) => ({ ...prev, pinHash: undefined }))}
+        onData={() => {
+          setShowProfile(false);
+          setShowData(true);
+        }}
       />
     );
   }
@@ -680,6 +684,10 @@ export default function App() {
         onDownload={handleDownloadBackup}
         onRestoreFile={handleRestoreBackup}
         onRestoreItem={handleRestoreDeletedItem}
+        onProfile={() => {
+          setShowData(false);
+          setShowProfile(true);
+        }}
       />
     );
   }
