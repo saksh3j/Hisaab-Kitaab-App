@@ -18,8 +18,9 @@ import {
   CATEGORIES,
   formatCurrency,
   roundMoney,
+  toMinorUnits,
+  fromMinorUnits,
 } from "@/lib/store";
-import { buildEqualSplitPlan } from "@/lib/transaction-splits";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import { useModalTransition } from "@/hooks/use-modal-transition";
 import { useSwipeToClose } from "@/hooks/use-swipe-to-close";
@@ -39,6 +40,11 @@ interface AddTransactionModalProps {
 }
 
 type SplitMode = "equal" | "custom";
+type EqualSplitPlan = {
+  memberAmounts: Record<string, number>;
+  selfAmount: number;
+};
+
 const STEP = 50;
 const MIN_AMOUNT = 1;
 
@@ -71,6 +77,40 @@ const formatMoneyInput = (value: number) => {
     .toFixed(2)
     .replace(/\.00$/, "")
     .replace(/(\.\d)0$/, "$1");
+};
+
+const buildEqualSplitPlan = (
+  memberIds: string[],
+  totalAmount: number,
+  includeMe: boolean,
+): EqualSplitPlan => {
+  const participants = includeMe ? [...memberIds, "__self__"] : memberIds;
+
+  if (participants.length === 0 || totalAmount < MIN_AMOUNT) {
+    return {
+      memberAmounts: {} as Record<string, number>,
+      selfAmount: 0,
+    };
+  }
+
+  const totalMinorUnits = toMinorUnits(totalAmount);
+  const baseShare = Math.floor(totalMinorUnits / participants.length);
+  const remainder = totalMinorUnits - baseShare * participants.length;
+  const memberAmounts: Record<string, number> = {};
+  let selfAmount = 0;
+
+  participants.forEach((participantId, index) => {
+    const share = fromMinorUnits(baseShare + (index < remainder ? 1 : 0));
+
+    if (participantId === "__self__") {
+      selfAmount = share;
+      return;
+    }
+
+    memberAmounts[participantId] = share;
+  });
+
+  return { memberAmounts, selfAmount };
 };
 
 export function AddTransactionModal({

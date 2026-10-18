@@ -1,9 +1,6 @@
-const CACHE_NAME = "hisaab-kitaab-v2";
-const PREVIOUS_CACHE_NAME = "hisaab-kitaab-v1";
-const CACHE_PREFIX = "hisaab-kitaab-";
+const CACHE_NAME = "hisaab-kitaab-v1";
 const APP_SHELL = [
   "/",
-  "/offline.html",
   "/manifest.json",
   "/favicon.ico",
   "/apple-icon.png",
@@ -15,11 +12,9 @@ const APP_SHELL = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting()),
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)),
   );
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
@@ -27,19 +22,17 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys.map((key) => {
-          // Retain one older cache for clients still referencing old hashed assets.
-          if (
-            key.startsWith(CACHE_PREFIX) &&
-            key !== CACHE_NAME &&
-            key !== PREVIOUS_CACHE_NAME
-          ) {
+          if (key !== CACHE_NAME) {
             return caches.delete(key);
           }
+
           return Promise.resolve();
         }),
       ),
-    ).then(() => self.clients.claim()),
+    ),
   );
+
+  self.clients.claim();
 });
 
 const isStaticAsset = (pathname) =>
@@ -54,19 +47,18 @@ const isStaticAsset = (pathname) =>
   pathname.endsWith(".ico") ||
   pathname.endsWith(".woff2");
 
-const cacheResponse = async (request, response) => {
-  if (!response || !response.ok) return response;
-  const cache = await caches.open(CACHE_NAME);
-  await cache.put(request, response.clone());
-  return response;
-};
-
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-  if (request.method !== "GET") return;
+
+  if (request.method !== "GET") {
+    return;
+  }
 
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return;
+
+  if (url.origin !== self.location.origin) {
+    return;
+  }
 
   if (url.pathname.startsWith("/api/send-ledger")) {
     event.respondWith(fetch(request));
@@ -74,24 +66,17 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (request.mode === "navigate") {
-    const networkResponse = fetch(request).then((response) =>
-      cacheResponse("/", response),
-    );
-    event.waitUntil(networkResponse.catch(() => undefined));
     event.respondWith(
-      caches.open(CACHE_NAME).then(async (cache) => {
-        const shell = await cache.match("/");
-        if (shell) {
-          // Serve cached HTML immediately so offline launches never wait on fetch.
-          return shell;
-        }
-
-        try {
-          return await networkResponse;
-        } catch {
-          return (await cache.match("/offline.html")) ?? Response.error();
-        }
-      }),
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put("/", copy));
+          return response;
+        })
+        .catch(async () => {
+          const cachedPage = await caches.match(request);
+          return cachedPage || caches.match("/");
+        }),
     );
     return;
   }
@@ -99,8 +84,15 @@ self.addEventListener("fetch", (event) => {
   if (isStaticAsset(url.pathname)) {
     event.respondWith(
       caches.match(request).then((cached) => {
-        if (cached) return cached;
-        return fetch(request).then((response) => cacheResponse(request, response));
+        if (cached) {
+          return cached;
+        }
+
+        return fetch(request).then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          return response;
+        });
       }),
     );
     return;
@@ -108,7 +100,11 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     fetch(request)
-      .then((response) => cacheResponse(request, response))
+      .then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        return response;
+      })
       .catch(() => caches.match(request)),
   );
 });

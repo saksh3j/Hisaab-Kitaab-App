@@ -1025,8 +1025,7 @@ export function MemberDetail({
           >
             <h3 className="text-lg font-semibold mb-2">Delete Member?</h3>
             <p className="text-sm text-muted-foreground mb-5">
-              This permanently removes {member.name} and all their transaction
-              history. You can undo immediately after deleting.
+              {member.name} ka saara hisaab delete ho jayega.
             </p>
             <div className="flex gap-3">
               <button
@@ -1062,8 +1061,7 @@ export function MemberDetail({
           >
             <h3 className="mb-2 text-lg font-semibold">Delete Transaction?</h3>
             <p className="mb-5 text-sm text-muted-foreground">
-              {transactionToDelete?.description} will be removed. You can undo
-              immediately after deleting.
+              {transactionToDelete?.description} permanently delete ho jayega.
             </p>
             <div className="flex gap-3">
               <button

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { HomePage } from "@/components/home-page";
 import { MemberDetail } from "@/components/member-detail";
@@ -16,7 +16,6 @@ import {
   getActiveBook,
   roundMoney,
 } from "@/lib/store";
-import { downloadBackup } from "@/lib/backup";
 
 export default function App() {
   const [state, setState] = useState<AppState>({
@@ -27,71 +26,24 @@ export default function App() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [nameInput, setNameInput] = useState("");
-  const stateRef = useRef(state);
-  const hasShownStorageError = useRef(false);
 
   useBackHandler(selectedMember !== null, () => setSelectedMember(null));
 
   useEffect(() => {
     const initialState = getInitialState();
-    stateRef.current = initialState;
     setState(initialState);
     setIsLoaded(true);
   }, []);
 
-  const updateState = useCallback(
-    (updater: (current: AppState) => AppState) => {
-      const nextState = updater(stateRef.current);
-      const result = saveState(nextState);
-
-      if (!result.ok) {
-        if (!hasShownStorageError.current) {
-          hasShownStorageError.current = true;
-          toast.error(
-            result.error === "storage-full"
-              ? "Your device storage is full. Changes were not saved."
-              : "Your device blocked local storage. Changes were not saved.",
-            {
-              duration: Infinity,
-              action: {
-                label: "Download backup",
-                onClick: () => downloadBackup(stateRef.current),
-              },
-            },
-          );
-        }
-        return false;
-      }
-
-      hasShownStorageError.current = false;
-      stateRef.current = nextState;
-      setState(nextState);
-      return true;
-    },
-    [],
-  );
-
-  const showUndo = useCallback(
-    (message: string, previousState: AppState) => {
-      toast.success(message, {
-        action: {
-          label: "Undo",
-          onClick: () => {
-            if (updateState(() => previousState)) {
-              toast.success("Deletion undone.");
-            }
-          },
-        },
-      });
-    },
-    [updateState],
-  );
+  useEffect(() => {
+    if (isLoaded) saveState(state);
+  }, [state, isLoaded]);
 
   const handleSetName = (e: React.FormEvent) => {
     e.preventDefault();
     if (!nameInput.trim()) return;
     const trimmedName = nameInput.trim();
-    updateState((prev) => ({ ...prev, userName: trimmedName }));
+    setState((prev) => ({ ...prev, userName: trimmedName }));
   };
 
   const handleUpdateUserName = useCallback((name: string) => {
@@ -100,10 +52,9 @@ export default function App() {
       toast.error("Name cannot be empty.");
       return;
     }
-    if (updateState((prev) => ({ ...prev, userName: trimmedName }))) {
-      toast.success("Name updated.");
-    }
-  }, [updateState]);
+    setState((prev) => ({ ...prev, userName: trimmedName }));
+    toast.success("Name updated.");
+  }, []);
 
   // ── Books ────────────────────────────────────────────────
   const handleAddBook = useCallback((name: string) => {
@@ -114,19 +65,19 @@ export default function App() {
       createdAt: new Date().toISOString(),
       members: [],
     };
-    if (!updateState((prev) => ({
+    setState((prev) => ({
       ...prev,
       books: [...prev.books, newBook],
       activeBookId: newBook.id,
-    }))) return;
+    }));
     setSelectedMember(null);
     toast.success(`${trimmedName} book created.`);
-  }, [updateState]);
+  }, []);
 
   const handleSwitchBook = useCallback((bookId: string) => {
-    if (!updateState((prev) => ({ ...prev, activeBookId: bookId }))) return;
+    setState((prev) => ({ ...prev, activeBookId: bookId }));
     setSelectedMember(null);
-  }, [updateState]);
+  }, []);
 
   const handleRenameBook = useCallback((bookId: string, name: string) => {
     const trimmedName = name.trim();
@@ -134,21 +85,21 @@ export default function App() {
       toast.error("Book name cannot be empty.");
       return;
     }
-    if (!updateState((prev) => ({
+    setState((prev) => ({
       ...prev,
       books: prev.books.map((b) =>
         b.id === bookId ? { ...b, name: trimmedName } : b,
       ),
-    }))) return;
+    }));
     toast.success(`Book renamed to ${trimmedName}.`);
-  }, [updateState]);
+  }, []);
 
   const handleDeleteBook = useCallback((bookId: string) => {
-    const previousState = stateRef.current;
-    const deletedBookName =
-      previousState.books.find((book) => book.id === bookId)?.name ?? "Book";
-    if (!updateState((prev) => {
+    let deletedBookName = "Book";
+    setState((prev) => {
       const deletedIndex = prev.books.findIndex((b) => b.id === bookId);
+      deletedBookName =
+        prev.books.find((b) => b.id === bookId)?.name ?? deletedBookName;
       const remaining = prev.books.filter((b) => b.id !== bookId);
 
       if (remaining.length === 0) {
@@ -179,15 +130,15 @@ export default function App() {
         books: remaining,
         activeBookId: nextActiveBookId,
       };
-    })) return;
+    });
     setSelectedMember(null);
-    showUndo(`${deletedBookName} and its history deleted.`, previousState);
-  }, [showUndo, updateState]);
+    toast.success(`${deletedBookName} deleted.`);
+  }, []);
 
   // ── Members ──────────────────────────────────────────────
   const handleAddMember = useCallback(
     (name: string, email?: string) => {
-      const activeBook = getActiveBook(stateRef.current);
+      const activeBook = getActiveBook(state);
       const normalizedName = name.trim().toLowerCase();
       const normalizedEmail = email?.trim().toLowerCase();
 
@@ -210,21 +161,21 @@ export default function App() {
         email: normalizedEmail,
         transactions: [],
       };
-      if (!updateState((prev) => ({
+      setState((prev) => ({
         ...prev,
         books: prev.books.map((b) =>
           b.id === prev.activeBookId
             ? { ...b, members: [...b.members, newMember] }
             : b,
         ),
-      }))) return;
+      }));
       toast.success(
         normalizedEmail
           ? `${capitalizedName} added with email.`
           : `${capitalizedName} added.`,
       );
     },
-    [updateState],
+    [state],
   );
 
   const handleUpdateMember = useCallback(
@@ -237,7 +188,7 @@ export default function App() {
         return;
       }
 
-      if (!updateState((prev) => ({
+      setState((prev) => ({
         ...prev,
         books: prev.books.map((book) => {
           if (book.id !== prev.activeBookId) return book;
@@ -250,7 +201,7 @@ export default function App() {
             ),
           };
         }),
-      }))) return;
+      }));
 
       setSelectedMember((prev) =>
         prev && prev.id === memberId
@@ -259,7 +210,7 @@ export default function App() {
       );
       toast.success(`Details saved for ${normalizedName}.`);
     },
-    [updateState],
+    [],
   );
 
   // ── Transactions ─────────────────────────────────────────
@@ -282,7 +233,7 @@ export default function App() {
       );
       const normalizedDescription = description.trim() || "Transaction";
 
-      if (!updateState((prev) => ({
+      setState((prev) => ({
         ...prev,
         books: prev.books.map((b) => {
           if (b.id !== prev.activeBookId) return b;
@@ -309,13 +260,28 @@ export default function App() {
             }),
           };
         }),
-      }))) return;
+      }));
 
       if (selectedMember) {
-        const updatedMember = getActiveBook(stateRef.current).members.find(
-          (member) => member.id === selectedMember.id,
+        const selectedMemberAmount = splitAmounts.get(selectedMember.id);
+        if (selectedMemberAmount === undefined) return;
+
+        const txn = {
+          id: generateId(),
+          type,
+          amount: selectedMemberAmount,
+          description: normalizedDescription,
+          date: new Date().toISOString(),
+          category,
+          isGroupTransaction: memberIds.length > 1,
+          splitWith:
+            memberIds.length > 1
+              ? memberIds.filter((id) => id !== selectedMember.id)
+              : undefined,
+        };
+        setSelectedMember((prev) =>
+          prev ? { ...prev, transactions: [...prev.transactions, txn] } : null,
         );
-        setSelectedMember(updatedMember ?? null);
       }
 
       toast.success(
@@ -324,7 +290,7 @@ export default function App() {
           : "Entry saved.",
       );
     },
-    [selectedMember, updateState],
+    [selectedMember],
   );
 
   const handleDeleteTransaction = useCallback(
@@ -333,8 +299,7 @@ export default function App() {
       const transactionLabel =
         selectedMember.transactions.find((t) => t.id === transactionId)
           ?.description || "Transaction";
-      const previousState = stateRef.current;
-      if (!updateState((prev) => ({
+      setState((prev) => ({
         ...prev,
         books: prev.books.map((b) => {
           if (b.id !== prev.activeBookId) return b;
@@ -352,7 +317,7 @@ export default function App() {
             ),
           };
         }),
-      }))) return;
+      }));
       setSelectedMember((prev) =>
         prev
           ? {
@@ -363,9 +328,9 @@ export default function App() {
             }
           : null,
       );
-      showUndo(`${transactionLabel} deleted.`, previousState);
+      toast.success(`${transactionLabel} deleted.`);
     },
-    [selectedMember, showUndo, updateState],
+    [selectedMember],
   );
 
   const handleToggleTransactionCleared = useCallback(
@@ -377,7 +342,7 @@ export default function App() {
           ?.description || "Transaction";
       const clearedAt = shouldClear ? new Date().toISOString() : undefined;
 
-      if (!updateState((prev) => ({
+      setState((prev) => ({
         ...prev,
         books: prev.books.map((b) => {
           if (b.id !== prev.activeBookId) return b;
@@ -397,7 +362,7 @@ export default function App() {
             ),
           };
         }),
-      }))) return;
+      }));
 
       toast.success(
         shouldClear
@@ -405,14 +370,13 @@ export default function App() {
           : `${transactionLabel} marked as active.`,
       );
     },
-    [selectedMember, updateState],
+    [selectedMember],
   );
 
   const handleDeleteMember = useCallback(() => {
     if (!selectedMember) return;
     const memberName = selectedMember.name;
-    const previousState = stateRef.current;
-    if (!updateState((prev) => ({
+    setState((prev) => ({
       ...prev,
       books: prev.books.map((b) => {
         if (b.id !== prev.activeBookId) return b;
@@ -421,10 +385,10 @@ export default function App() {
           members: b.members.filter((m) => m.id !== selectedMember.id),
         };
       }),
-    }))) return;
+    }));
     setSelectedMember(null);
-    showUndo(`${memberName} and all transaction history deleted.`, previousState);
-  }, [selectedMember, showUndo, updateState]);
+    toast.success(`${memberName} deleted.`);
+  }, [selectedMember]);
 
   // ── Loading ───────────────────────────────────────────────
   if (!isLoaded) {
