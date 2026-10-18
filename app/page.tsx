@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { actionToast, toast } from "@/lib/notifications";
+import { toast } from "sonner";
 import { HomePage } from "@/components/home-page";
 import { MemberDetail } from "@/components/member-detail";
 import { useBackHandler } from "@/hooks/use-back-handler";
@@ -47,7 +47,7 @@ export default function App() {
       if (!result.ok) {
         if (!hasShownStorageError.current) {
           hasShownStorageError.current = true;
-          actionToast.error(
+          toast.error(
             result.error === "storage-full"
               ? "Your device storage is full. Changes were not saved."
               : "Your device blocked local storage. Changes were not saved.",
@@ -73,12 +73,14 @@ export default function App() {
 
   const showUndo = useCallback(
     (message: string, previousState: AppState) => {
-      actionToast.success(message, {
+      toast.success(message, {
         duration: 10_000,
         action: {
           label: "Undo",
           onClick: () => {
-            updateState(() => previousState);
+            if (updateState(() => previousState)) {
+              toast.success("Deletion undone.");
+            }
           },
         },
       });

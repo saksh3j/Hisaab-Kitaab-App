@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "@/lib/notifications";
+import { toast } from "sonner";
 import {
   Member,
   Transaction,

@@ -61,8 +61,9 @@ export default function RootLayout({
           <ThemeInitializer />
           <Toaster
             position="bottom-center"
+            richColors
             closeButton
-            visibleToasts={1}
+            visibleToasts={3}
             toastOptions={{ className: "hk-toast" }}
           />
           {children}
