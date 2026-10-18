@@ -639,7 +639,7 @@ export function HomePage({
       )}
 
       <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] pt-3 backdrop-blur">
-        <nav className="mx-auto grid max-w-md grid-cols-4" aria-label="Primary navigation">
+        <nav className="home-bottom-nav mx-auto max-w-md" aria-label="Primary navigation">
           <button type="button" onClick={() => setActiveTab("members")} className={`grid justify-items-center gap-1 text-xs font-semibold ${activeTab === "members" ? "text-primary" : "text-muted-foreground"}`}>
             <Users className="h-5 w-5" />
             Members

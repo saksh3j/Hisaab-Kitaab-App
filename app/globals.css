@@ -273,6 +273,22 @@
   color: hsl(var(--primary));
 }
 
+.home-bottom-nav {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  align-items: center;
+  width: 100%;
+}
+
+.home-bottom-nav > button {
+  display: flex !important;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
