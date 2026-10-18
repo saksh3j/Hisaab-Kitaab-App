@@ -59,13 +59,7 @@ export default function RootLayout({
         >
           <OfflineProvider />
           <ThemeInitializer />
-          <Toaster
-            position="bottom-center"
-            richColors
-            closeButton
-            visibleToasts={3}
-            toastOptions={{ className: "hk-toast" }}
-          />
+          <Toaster position="bottom-right" richColors closeButton />
           {children}
         </ThemeProvider>
         <Analytics />
