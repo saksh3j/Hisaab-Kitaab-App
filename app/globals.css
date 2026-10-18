@@ -224,8 +224,8 @@
 /* Dedicated visual language for the mobile profile, data, and category flows. */
 .hk-mobile-screen {
   min-height: 100vh;
-  background: #10111d;
-  color: #f1f0ff;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
 .hk-mobile-screen .hk-page-title {
@@ -236,14 +236,14 @@
 }
 
 .hk-mobile-screen .hk-panel {
-  border: 1px solid rgba(132, 136, 202, 0.1);
+  border: 1px solid hsl(var(--border));
   border-radius: 2rem;
-  background: #1c1d31;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.16);
+  background: hsl(var(--card));
+  box-shadow: 0 16px 36px hsl(var(--foreground) / 0.08);
 }
 
 .hk-mobile-screen .hk-subtle {
-  color: #b9b9dc;
+  color: hsl(var(--muted-foreground));
 }
 
 .hk-mobile-screen .hk-nav {
@@ -254,8 +254,8 @@
   z-index: 20;
   display: flex;
   justify-content: space-around;
-  border-top: 1px solid rgba(132, 136, 202, 0.12);
-  background: #16172b;
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(var(--card) / 0.96);
   padding: 0.85rem max(1.25rem, env(safe-area-inset-right)) calc(0.85rem + env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
 }
 
@@ -264,13 +264,13 @@
   min-width: 3.5rem;
   justify-items: center;
   gap: 0.3rem;
-  color: #b9b9dc;
+  color: hsl(var(--muted-foreground));
   font-size: 0.72rem;
   font-weight: 700;
 }
 
 .hk-mobile-screen .hk-nav button[data-active="true"] {
-  color: #8588ff;
+  color: hsl(var(--primary));
 }
 
 @keyframes spin {

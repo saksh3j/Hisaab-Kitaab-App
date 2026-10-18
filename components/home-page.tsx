@@ -277,7 +277,7 @@ export function HomePage({
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col pb-24">
       {/* Header */}
 
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md safe-top border-b border-border">
@@ -627,7 +627,7 @@ export function HomePage({
           type="button"
           onClick={() => setShowHistoryFilter(true)}
           className="fixed right-4 z-20 inline-flex items-center gap-2 rounded-full border border-border/80 bg-popover/95 px-4 py-3 text-sm font-semibold text-foreground shadow-[0_18px_40px_-24px_rgba(15,23,42,0.55)] backdrop-blur"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 5.5rem)" }}
         >
           <CalendarRange className="h-4 w-4 text-muted-foreground" />
           <span>
@@ -638,11 +638,25 @@ export function HomePage({
         </button>
       )}
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-card/95 py-3 text-center backdrop-blur">
-        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-foreground/85">
-          Made With ❤️ By Saksham Jain
-        </p>
+      <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] pt-3 backdrop-blur">
+        <nav className="mx-auto grid max-w-md grid-cols-4" aria-label="Primary navigation">
+          <button type="button" onClick={() => setActiveTab("members")} className={`grid justify-items-center gap-1 text-xs font-semibold ${activeTab === "members" ? "text-primary" : "text-muted-foreground"}`}>
+            <Users className="h-5 w-5" />
+            Members
+          </button>
+          <button type="button" onClick={() => setActiveTab("transactions")} className={`grid justify-items-center gap-1 text-xs font-semibold ${activeTab === "transactions" ? "text-primary" : "text-muted-foreground"}`}>
+            <ReceiptIndianRupee className="h-5 w-5" />
+            History
+          </button>
+          <button type="button" onClick={onOpenData} className="grid justify-items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground">
+            <Database className="h-5 w-5" />
+            Data
+          </button>
+          <button type="button" onClick={onOpenProfile} className="grid justify-items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground">
+            <CircleUserRound className="h-5 w-5" />
+            Me
+          </button>
+        </nav>
       </footer>
 
       {/* ── Books Drawer ────────────────────────────────────── */}
