@@ -121,6 +121,31 @@ export function MemberDetail({
     );
   }, [member.transactions, selectedMonth]);
 
+  const outstandingAfterTransaction = useMemo(() => {
+    const balances = new Map<string, number>();
+    let runningBalance = 0;
+
+    [...member.transactions]
+      .sort(
+        (a, b) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime(),
+      )
+      .forEach((transaction) => {
+        if (!isTransactionCleared(transaction)) {
+          runningBalance = roundMoney(
+            runningBalance +
+              (transaction.type === "lena"
+                ? transaction.amount
+                : -transaction.amount),
+          );
+        }
+
+        balances.set(transaction.id, runningBalance);
+      });
+
+    return balances;
+  }, [member.transactions]);
+
   useEffect(() => {
     if (selectedMonth === "all") return;
 
@@ -891,6 +916,9 @@ export function MemberDetail({
                 <TransactionItem
                   key={transaction.id}
                   transaction={transaction}
+                  outstandingBalance={
+                    outstandingAfterTransaction.get(transaction.id) ?? 0
+                  }
                   onDeleteRequest={() => setTransactionToDelete(transaction)}
                   onToggleCleared={onToggleTransactionCleared}
                 />
@@ -1121,10 +1149,12 @@ export function MemberDetail({
 
 function TransactionItem({
   transaction,
+  outstandingBalance,
   onDeleteRequest,
   onToggleCleared,
 }: {
   transaction: Transaction;
+  outstandingBalance: number;
   onDeleteRequest: () => void;
   onToggleCleared: (transactionId: string, shouldClear: boolean) => void;
 }) {
@@ -1181,6 +1211,23 @@ function TransactionItem({
         <p className="text-[11px] text-muted-foreground/90 mt-0.5">
           {formatDate(transaction.date)}
         </p>
+        {!isCleared && (
+          <p
+            className={`mt-0.5 text-[10px] font-semibold ${
+              outstandingBalance > 0
+                ? "text-success"
+                : outstandingBalance < 0
+                  ? "text-danger"
+                  : "text-muted-foreground"
+            }`}
+          >
+            {outstandingBalance === 0
+              ? "After this: settled up"
+              : outstandingBalance > 0
+                ? `After this: ${formatCurrency(outstandingBalance)} lena hai`
+                : `After this: ${formatCurrency(Math.abs(outstandingBalance))} dena hai`}
+          </p>
+        )}
       </div>
 
       {showActions ? (

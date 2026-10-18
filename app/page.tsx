@@ -210,7 +210,7 @@ export default function App() {
       );
       toast.success(`Details saved for ${normalizedName}.`);
     },
-    [state],
+    [],
   );
 
   // ── Transactions ─────────────────────────────────────────
@@ -455,7 +455,7 @@ export default function App() {
                 type="submit"
                 disabled={!nameInput.trim()}
                 className="w-full rounded-2xl bg-slate-900 py-3 text-base font-bold text-white shadow-lg shadow-slate-900/15 transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-40">
-                Let's Go
+                Let&apos;s Go
               </button>
             </form>
           </div>

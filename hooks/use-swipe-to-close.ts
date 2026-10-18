@@ -42,7 +42,7 @@ export function useSwipeToClose({
         window.clearTimeout(timeoutId);
       }
     };
-  }, [isOpen]);
+  }, [isOpen, resetDelay]);
 
   const handleDragStart = (e: React.TouchEvent<HTMLElement>) => {
     if (!isMobile || !isOpen || e.touches.length !== 1) return;

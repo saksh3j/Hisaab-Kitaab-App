@@ -309,7 +309,7 @@ export function AddTransactionModal({
 
   const equalSplitPlan = useMemo(
     () => buildEqualSplitPlan(selectedMembers, amount, shouldIncludeMe),
-    [amount, selectedMembers, selectedMembersKey, shouldIncludeMe],
+    [amount, selectedMembers, shouldIncludeMe],
   );
 
   const customSplitMap = useMemo(
@@ -318,7 +318,7 @@ export function AddTransactionModal({
         acc[memberId] = parseMoneyInput(customSplitInputs[memberId] ?? "");
         return acc;
       }, {}),
-    [customSplitInputs, selectedMembers, selectedMembersKey],
+    [customSplitInputs, selectedMembers],
   );
 
   const activeSplitMap = shouldShowSplitSection
