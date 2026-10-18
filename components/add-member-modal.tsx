@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { Drawer } from "@vladyoslav/drawer";
 import { toast } from "sonner";
 import { Member } from "@/lib/store";
 import { useBackHandler } from "@/hooks/use-back-handler";
-import { useModalTransition } from "@/hooks/use-modal-transition";
-import { useSwipeToClose } from "@/hooks/use-swipe-to-close";
 
 interface AddMemberModalProps {
   isOpen: boolean;
@@ -34,8 +33,6 @@ export function AddMemberModal({
   const [error, setError] = useState("");
 
   useBackHandler(isOpen, onClose);
-  const transition = useModalTransition(isOpen, 220);
-  const swipe = useSwipeToClose({ isOpen, onClose, resetDelay: 0 });
 
   useEffect(() => {
     if (isOpen) {
@@ -44,23 +41,6 @@ export function AddMemberModal({
       setError("");
     }
   }, [isOpen, mode, initialName, initialEmail]);
-
-  if (!transition.isMounted) return null;
-
-  const overlayStyle: React.CSSProperties = {
-    opacity: transition.isVisible ? swipe.overlayOpacity : 0,
-    transition: swipe.isDragging ? "none" : "opacity 160ms ease",
-  };
-
-  const panelStyle: React.CSSProperties = {
-    transform: `translate3d(0, ${swipe.dragOffset + (transition.isVisible ? 0 : 18)}px, 0)`,
-    opacity: transition.isVisible ? 1 : 0.98,
-    transition: swipe.isDragging
-      ? "none"
-      : "transform 220ms cubic-bezier(0.22,1,0.36,1), opacity 180ms ease",
-    willChange: "transform, opacity",
-    backfaceVisibility: "hidden",
-  };
 
   const handleNameChange = (val: string) => {
     // Auto-capitalize first letter
@@ -108,39 +88,35 @@ export function AddMemberModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/50 transition-opacity"
-        style={overlayStyle}
-        onClick={onClose}
-      />
-
-      <div
-        className="relative w-full max-w-md overflow-hidden rounded-t-2xl bg-popover shadow-2xl safe-bottom sm:rounded-2xl"
-        style={panelStyle}
-      >
+    <Drawer.Root
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      snapPoints={["45%", "70%"]}
+      shouldScaleBackground
+      scaleFrom="60%"
+    >
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 z-50 bg-black/50" />
+        <Drawer.Content className="fixed right-0 bottom-0 left-0 z-50 mx-auto w-full max-w-md overflow-hidden rounded-t-2xl bg-popover shadow-2xl safe-bottom sm:bottom-6">
         {/* Drag handle pill (visible on mobile) */}
         <div
           className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing touch-none sm:hidden"
-          {...swipe.dragHandlers}
         >
           <div className="w-10 h-1 rounded-full bg-border" />
         </div>
 
         <div className="p-5">
-          <div
-            className="flex items-center justify-between mb-5"
-            {...swipe.dragHandlers}
-          >
-            <h2 className="text-lg font-semibold">
+          <div className="flex items-center justify-between mb-5">
+            <Drawer.Title className="text-lg font-semibold">
               {mode === "edit" ? "Edit Member" : "Add Member"}
-            </h2>
-            <button
-              onClick={onClose}
+            </Drawer.Title>
+            <Drawer.Close
               className="p-1.5 rounded-lg hover:bg-muted"
             >
               <X className="w-5 h-5 text-muted-foreground" />
-            </button>
+            </Drawer.Close>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -189,7 +165,8 @@ export function AddMemberModal({
             </button>
           </form>
         </div>
-      </div>
-    </div>
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
   );
 }
