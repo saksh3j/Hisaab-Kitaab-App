@@ -110,6 +110,19 @@ export interface Book {
   members: Member[];
 }
 
+export interface DeletedItem {
+  id: string;
+  kind: "transaction" | "member" | "book";
+  label: string;
+  amount?: number;
+  deletedAt: string;
+  bookId?: string;
+  memberId?: string;
+  transaction?: Transaction;
+  member?: Member;
+  book?: Book;
+}
+
 export interface AppState {
   books: Book[];
   activeBookId: string;
@@ -118,6 +131,8 @@ export interface AppState {
   userAvatar?: string;
   userPhoto?: string;
   pinHash?: string;
+  lastBackupAt?: string;
+  deletedItems?: DeletedItem[];
 }
 
 export const STORAGE_KEY = "hisaab-kitaab-data";

@@ -43,6 +43,7 @@ import {
     ReceiptIndianRupee,
     CalendarRange,
   CircleUserRound,
+  Database,
   } from "lucide-react";
 
 interface HomePageProps {
@@ -64,6 +65,7 @@ interface HomePageProps {
   onDeleteBook: (bookId: string) => void;
   onUpdateUserName: (name: string) => void;
   onOpenProfile: () => void;
+  onOpenData: () => void;
 }
 
 export function HomePage({
@@ -79,6 +81,7 @@ export function HomePage({
   onDeleteBook,
   onUpdateUserName,
   onOpenProfile,
+  onOpenData,
 }: HomePageProps) {
   const [search, setSearch] = useState("");
   const [showAddMember, setShowAddMember] = useState(false);
@@ -325,14 +328,10 @@ export function HomePage({
                 </div>
               </div>
             )}
-            <button
-              type="button"
-              onClick={onOpenProfile}
-              className="rounded-full border border-border/60 bg-card/70 p-2 text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground"
-              aria-label="Open profile"
-            >
-              <CircleUserRound className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button type="button" onClick={onOpenData} className="rounded-full border border-border/60 bg-card/70 p-2 text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground" aria-label="Open data and backup"><Database className="h-4 w-4" /></button>
+              <button type="button" onClick={onOpenProfile} className="rounded-full border border-border/60 bg-card/70 p-2 text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground" aria-label="Open profile"><CircleUserRound className="h-4 w-4" /></button>
+            </div>
           </div>
 
           {/* Book Selector & Theme/Add Row */}

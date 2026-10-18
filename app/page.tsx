@@ -6,18 +6,21 @@ import { HomePage } from "@/components/home-page";
 import { MemberDetail } from "@/components/member-detail";
 import { PinLock } from "@/components/pin-lock";
 import { ProfileScreen } from "@/components/profile-screen";
+import { DataScreen } from "@/components/data-screen";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import {
   Member,
   AppState,
   TransactionCategory,
   TransactionSplit,
+  DeletedItem,
   getInitialState,
   saveState,
   generateId,
   getActiveBook,
   roundMoney,
   hashPin,
+  parseBackup,
 } from "@/lib/store";
 import { downloadBackup } from "@/lib/backup";
 
@@ -32,6 +35,7 @@ export default function App() {
   const [nameInput, setNameInput] = useState("");
   const [isLocked, setIsLocked] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showData, setShowData] = useState(false);
   const stateRef = useRef(state);
   const hasShownStorageError = useRef(false);
 
@@ -92,6 +96,9 @@ export default function App() {
     },
     [updateState],
   );
+
+  const addDeletedItem = (items: DeletedItem[] | undefined, item: DeletedItem) =>
+    [item, ...(items ?? [])].slice(0, 50);
 
   const handleSetName = (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,6 +188,15 @@ export default function App() {
     const deletedBookName =
       previousState.books.find((book) => book.id === bookId)?.name ?? "Book";
     if (!updateState((prev) => {
+      const deletedBook = prev.books.find((book) => book.id === bookId);
+      if (!deletedBook) return prev;
+      const deletedItems = addDeletedItem(prev.deletedItems, {
+        id: generateId(),
+        kind: "book",
+        label: `Book · ${deletedBook.name}`,
+        deletedAt: new Date().toISOString(),
+        book: deletedBook,
+      });
       const deletedIndex = prev.books.findIndex((b) => b.id === bookId);
       const remaining = prev.books.filter((b) => b.id !== bookId);
 
@@ -195,6 +211,7 @@ export default function App() {
           ...prev,
           books: [defaultBook],
           activeBookId: defaultBook.id,
+          deletedItems,
         };
       }
 
@@ -211,6 +228,7 @@ export default function App() {
         ...prev,
         books: remaining,
         activeBookId: nextActiveBookId,
+        deletedItems,
       };
     })) return;
     setSelectedMember(null);
@@ -369,18 +387,23 @@ export default function App() {
       const previousState = stateRef.current;
       if (!updateState((prev) => ({
         ...prev,
+        deletedItems: addDeletedItem(prev.deletedItems, {
+          id: generateId(),
+          kind: "transaction",
+          label: `Transaction · ${transactionLabel}`,
+          amount: selectedMember.transactions.find((item) => item.id === transactionId)?.amount,
+          deletedAt: new Date().toISOString(),
+          bookId: prev.activeBookId,
+          memberId: selectedMember.id,
+          transaction: selectedMember.transactions.find((item) => item.id === transactionId),
+        }),
         books: prev.books.map((b) => {
           if (b.id !== prev.activeBookId) return b;
           return {
             ...b,
             members: b.members.map((m) =>
               m.id === selectedMember.id
-                ? {
-                    ...m,
-                    transactions: m.transactions.filter(
-                      (t) => t.id !== transactionId,
-                    ),
-                  }
+                ? { ...m, transactions: m.transactions.filter((t) => t.id !== transactionId) }
                 : m,
             ),
           };
@@ -447,6 +470,14 @@ export default function App() {
     const previousState = stateRef.current;
     if (!updateState((prev) => ({
       ...prev,
+      deletedItems: addDeletedItem(prev.deletedItems, {
+        id: generateId(),
+        kind: "member",
+        label: `Member · ${memberName}`,
+        deletedAt: new Date().toISOString(),
+        bookId: prev.activeBookId,
+        member: selectedMember,
+      }),
       books: prev.books.map((b) => {
         if (b.id !== prev.activeBookId) return b;
         return {
@@ -458,6 +489,53 @@ export default function App() {
     setSelectedMember(null);
     showUndo(`${memberName} and all transaction history deleted.`, previousState);
   }, [selectedMember, showUndo, updateState]);
+
+  const handleDownloadBackup = useCallback(() => {
+    downloadBackup(stateRef.current);
+    updateState((prev) => ({ ...prev, lastBackupAt: new Date().toISOString() }));
+    toast.success("Backup downloaded.");
+  }, [updateState]);
+
+  const handleRestoreBackup = useCallback(async (file: File) => {
+    const restoredState = parseBackup(await file.text());
+    if (!restoredState) {
+      toast.error("That backup file is invalid or unsupported.");
+      return;
+    }
+    if (!updateState(() => restoredState)) return;
+    setSelectedMember(null);
+    toast.success("Backup restored successfully.");
+  }, [updateState]);
+
+  const handleRestoreDeletedItem = useCallback((itemId: string) => {
+    const item = stateRef.current.deletedItems?.find((entry) => entry.id === itemId);
+    if (!item) return;
+
+    const restoredBook = item.book;
+    const restoredMember = item.member;
+    const restoredTransaction = item.transaction;
+
+    if (!updateState((prev) => {
+      let books = prev.books;
+      if (item.kind === "book" && restoredBook && !books.some((book) => book.id === restoredBook.id)) {
+        books = [...books, restoredBook];
+      }
+      if (item.kind === "member" && restoredMember && item.bookId) {
+        books = books.map((book) => book.id === item.bookId && !book.members.some((member) => member.id === restoredMember.id)
+          ? { ...book, members: [...book.members, restoredMember] }
+          : book);
+      }
+      if (item.kind === "transaction" && restoredTransaction && item.bookId && item.memberId) {
+        books = books.map((book) => book.id === item.bookId
+          ? { ...book, members: book.members.map((member) => member.id === item.memberId && !member.transactions.some((transaction) => transaction.id === restoredTransaction.id)
+            ? { ...member, transactions: [...member.transactions, restoredTransaction] }
+            : member) }
+          : book);
+      }
+      return { ...prev, books, deletedItems: (prev.deletedItems ?? []).filter((entry) => entry.id !== itemId) };
+    })) return;
+    toast.success(`${item.label} restored.`);
+  }, [updateState]);
 
   // ── Loading ───────────────────────────────────────────────
   if (!isLoaded) {
@@ -564,6 +642,19 @@ export default function App() {
     );
   }
 
+  if (showData) {
+    return (
+      <DataScreen
+        lastBackupAt={state.lastBackupAt}
+        deletedItems={state.deletedItems ?? []}
+        onBack={() => setShowData(false)}
+        onDownload={handleDownloadBackup}
+        onRestoreFile={handleRestoreBackup}
+        onRestoreItem={handleRestoreDeletedItem}
+      />
+    );
+  }
+
   const activeBook = getActiveBook(state);
 
   // ── Member Detail ─────────────────────────────────────────
@@ -603,6 +694,7 @@ export default function App() {
       onDeleteBook={handleDeleteBook}
       onUpdateUserName={handleUpdateUserName}
       onOpenProfile={() => setShowProfile(true)}
+      onOpenData={() => setShowData(true)}
     />
   );
 }
