@@ -42,6 +42,7 @@ import {
     Moon,
     ReceiptIndianRupee,
     CalendarRange,
+  CircleUserRound,
   } from "lucide-react";
 
 interface HomePageProps {
@@ -62,6 +63,7 @@ interface HomePageProps {
   onRenameBook: (bookId: string, name: string) => void;
   onDeleteBook: (bookId: string) => void;
   onUpdateUserName: (name: string) => void;
+  onOpenProfile: () => void;
 }
 
 export function HomePage({
@@ -76,6 +78,7 @@ export function HomePage({
   onRenameBook,
   onDeleteBook,
   onUpdateUserName,
+  onOpenProfile,
 }: HomePageProps) {
   const [search, setSearch] = useState("");
   const [showAddMember, setShowAddMember] = useState(false);
@@ -271,7 +274,7 @@ export function HomePage({
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md safe-top border-b border-border">
         <div className="px-4 pt-6 pb-4 space-y-5">
           {/* Greeting */}
-          <div className="flex w-full items-center justify-start">
+          <div className="flex w-full items-center justify-between">
             {isEditingName ? (
               <div className="flex max-w-xs items-center gap-2">
                 <input
@@ -322,6 +325,14 @@ export function HomePage({
                 </div>
               </div>
             )}
+            <button
+              type="button"
+              onClick={onOpenProfile}
+              className="rounded-full border border-border/60 bg-card/70 p-2 text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground"
+              aria-label="Open profile"
+            >
+              <CircleUserRound className="h-4 w-4" />
+            </button>
           </div>
 
           {/* Book Selector & Theme/Add Row */}

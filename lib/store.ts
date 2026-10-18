@@ -115,6 +115,9 @@ export interface AppState {
   activeBookId: string;
   userName?: string;
   userEmail?: string;
+  userAvatar?: string;
+  userPhoto?: string;
+  pinHash?: string;
 }
 
 export const STORAGE_KEY = "hisaab-kitaab-data";
@@ -206,6 +209,14 @@ export function createBackup(state: AppState): string {
   };
 
   return JSON.stringify(backup, null, 2);
+}
+
+export async function hashPin(pin: string): Promise<string> {
+  const encoded = new TextEncoder().encode(pin);
+  const digest = await crypto.subtle.digest("SHA-256", encoded);
+  return Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
 }
 
 export function getInitialState(): AppState {

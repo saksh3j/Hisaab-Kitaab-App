@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { HomePage } from "@/components/home-page";
 import { MemberDetail } from "@/components/member-detail";
+import { PinLock } from "@/components/pin-lock";
+import { ProfileScreen } from "@/components/profile-screen";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import {
   Member,
@@ -15,6 +17,7 @@ import {
   generateId,
   getActiveBook,
   roundMoney,
+  hashPin,
 } from "@/lib/store";
 import { downloadBackup } from "@/lib/backup";
 
@@ -27,6 +30,8 @@ export default function App() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [nameInput, setNameInput] = useState("");
+  const [isLocked, setIsLocked] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const stateRef = useRef(state);
   const hasShownStorageError = useRef(false);
 
@@ -36,6 +41,7 @@ export default function App() {
     const initialState = getInitialState();
     stateRef.current = initialState;
     setState(initialState);
+    setIsLocked(Boolean(initialState.pinHash));
     setIsLoaded(true);
   }, []);
 
@@ -104,6 +110,33 @@ export default function App() {
       toast.success("Name updated.");
     }
   }, [updateState]);
+
+  const handleUpdateProfile = useCallback((profile: {
+    name?: string;
+    avatar?: string;
+    photo?: string;
+  }) => {
+    if (profile.name) {
+      handleUpdateUserName(profile.name);
+    }
+    const { name: _name, ...appearance } = profile;
+    if (Object.keys(appearance).length > 0) {
+      updateState((prev) => ({ ...prev, ...appearance }));
+    }
+  }, [handleUpdateUserName, updateState]);
+
+  const handleSetPin = useCallback(async (pin: string) => {
+    const pinHash = await hashPin(pin);
+    updateState((prev) => ({ ...prev, pinHash }));
+  }, [updateState]);
+
+  const handleUnlock = useCallback(async (pin: string) => {
+    if (!stateRef.current.pinHash) return true;
+    const pinHash = await hashPin(pin);
+    if (pinHash !== stateRef.current.pinHash) return false;
+    setIsLocked(false);
+    return true;
+  }, []);
 
   // ── Books ────────────────────────────────────────────────
   const handleAddBook = useCallback((name: string) => {
@@ -506,6 +539,31 @@ export default function App() {
     );
   }
 
+  if (isLocked) {
+    return (
+      <PinLock
+        name={state.userName}
+        avatar={state.userPhoto ? "📷" : state.userAvatar || "🦁"}
+        onUnlock={handleUnlock}
+      />
+    );
+  }
+
+  if (showProfile) {
+    return (
+      <ProfileScreen
+        name={state.userName}
+        avatar={state.userAvatar}
+        photo={state.userPhoto}
+        hasPin={Boolean(state.pinHash)}
+        onBack={() => setShowProfile(false)}
+        onUpdateProfile={handleUpdateProfile}
+        onSetPin={handleSetPin}
+        onRemovePin={() => updateState((prev) => ({ ...prev, pinHash: undefined }))}
+      />
+    );
+  }
+
   const activeBook = getActiveBook(state);
 
   // ── Member Detail ─────────────────────────────────────────
@@ -544,6 +602,7 @@ export default function App() {
       onRenameBook={handleRenameBook}
       onDeleteBook={handleDeleteBook}
       onUpdateUserName={handleUpdateUserName}
+      onOpenProfile={() => setShowProfile(true)}
     />
   );
 }
